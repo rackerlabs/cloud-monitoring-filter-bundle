@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.openrepose.filters.custom</groupId>
+        <artifactId>cloud-monitoring-custom-repose</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <name>Cloud Monitoring - Extract Device ID</name>
+    <artifactId>extract-device-id</artifactId>
+    <packaging>jar</packaging>
+
+    <description>
+        This filter is a custom filter written in Java to extract the device ID from the URI.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openrepose</groupId>
+            <artifactId>core-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openrepose</groupId>
+            <artifactId>core-service-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openrepose</groupId>
+            <artifactId>utilities</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jvnet.jaxb2_commons</groupId>
+            <artifactId>jaxb2-basics-runtime</artifactId>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <!-- Cleans up the XSD to conform to XML 1.0 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>xml-maven-plugin</artifactId>
+            </plugin>
+            <!-- JAXB Schema Compilation Support -->
+            <plugin>
+                <groupId>org.jvnet.jaxb2.maven2</groupId>
+                <artifactId>maven-jaxb2-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
