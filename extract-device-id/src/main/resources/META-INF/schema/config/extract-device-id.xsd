@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xs:schema elementFormDefault="qualified" attributeFormDefault="unqualified"
-           targetNamespace="http://docs.example.com/repose/extract-device-id/v1.0"
-           xmlns:extract-device-id="http://docs.example.com/repose/extract-device-id/v1.0"
+           targetNamespace="http://docs.openrepose.org/repose/extract-device-id/v1.0"
+           xmlns:extract-device-id="http://docs.openrepose.org/repose/extract-device-id/v1.0"
            xmlns:html="http://www.w3.org/1999/xhtml"
-           xmlns:xerces="http://xerces.apache.org"
-           xmlns:saxon="http://saxon.sf.net/"
-           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
            xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-    <!-- This matches the root element tag in extract-device-id.cfg.xml created in step 14. -->
     <xs:element name="extract-device-id" type="extract-device-id:ExtractDeviceIdConfig"/>
     <xs:complexType name="ExtractDeviceIdConfig">
         <xs:annotation>
@@ -21,55 +17,61 @@
             </xs:documentation>
         </xs:annotation>
 
-        <xs:all>
-            <!-- This matches the child tag <extract-device-id> in extract-device-id.cfg.xml. -->
-            <xs:element name="messages" type="extract-device-id:MessageList" minOccurs="1" maxOccurs="1"/>
-            <!-- There must be one and only one <messages> tag in extract-device-id.cfg.xml -->
-        </xs:all>
-    </xs:complexType>
-    <xs:complexType name="MessageList">
-        <xs:annotation>
-            <xs:documentation>
-                <html:p>
-                    List messages.
-                </html:p>
-            </xs:documentation>
-        </xs:annotation>
         <xs:sequence>
-            <!-- This matches the child tag <messages> in extract-device-id.cfg.xml. -->
-            <!-- There is one or more instance of a <message> tag in extract-device-id.cfg.xml -->
-            <xs:element name="message" type="extract-device-id:Message"
-                        minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="delegating" type="extract-device-id:DelegatingType" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
-
-        <!-- Must match <message> tag (children of messages tag in extract-device-id.cfg.xml). -->
-        <xs:assert vc:minVersion="1.1"
-                   test="count(distinct-values(extract-device-id:message /@value)) = count(extract-device-id:message /@value)"
-                   xerces:message="A message must have value unique within their containing messages list"
-                   saxon:message="A message must have value unique within their containing messages list"/>
-    </xs:complexType>
-
-    <!-- This results in the generation of
-    target/generated-sources/xjc/org/openrepose/filters/custom/extractdeviceid/config/Message.java
-    with a property named value with type: String -->
-    <xs:complexType name="Message">
-        <xs:annotation>
-            <xs:documentation>
-                <html:p>
-                    The message
-                </html:p>
-            </xs:documentation>
-        </xs:annotation>
-
-        <!-- There is only one attribute of the <message> tag, and it is required. -->
-        <xs:attribute name="value" type="xs:string" use="required">
+        <xs:attribute name="maas-service-uri" type="xs:anyURI" use="required">
             <xs:annotation>
                 <xs:documentation>
                     <html:p>
-                        This is the value that is printed to the log.
+                        The target Rackspace MaaS endpoint URI for requests including host, port, and path to service.
+                    </html:p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="cache-timeout-millis" type="extract-device-id:ZeroOrPositiveInteger" use="optional" default="0">
+            <xs:annotation>
+                <xs:documentation>
+                    <html:p>
+                        Time in milliseconds to cache auth token. The default is 10 minutes. A value of Zero (0) is disabled.
                     </html:p>
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
     </xs:complexType>
+
+    <xs:complexType name="DelegatingType">
+        <xs:annotation>
+            <xs:documentation>
+                <html:p>
+                    Whether or not you would like this filter to populate the delegation headers. Inclusion means you do.
+                </html:p>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="quality" type="extract-device-id:QualityType" use="optional" default="0.2">
+            <xs:annotation>
+                <xs:documentation>
+                    <html:p>
+                        What quality you want any output headers to be.
+                        When setting up a chain of delegating filters the highest quality number will be the one that is
+                        eventually output.
+                        Default is 0.2
+                    </html:p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:simpleType name="QualityType">
+        <xs:restriction base="xs:double">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="1.0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="ZeroOrPositiveInteger">
+        <xs:restriction base="xs:int">
+            <xs:minInclusive value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
 </xs:schema>
