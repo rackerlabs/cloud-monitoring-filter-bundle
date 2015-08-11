@@ -295,7 +295,7 @@
                                     <version>${repose.version}</version>
                                     <type>ear</type>
                                     <outputDirectory>${project.build.directory}/repose_home/artifacts</outputDirectory>
-                                    <destFileName>filter-bundle.jar</destFileName>
+                                    <destFileName>filter-bundle.ear</destFileName>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<extract-device-id xmlns='http://docs.example.com/repose/extract-device-id/v1.0'>
-    <messages>
-        <!-- This is the message you want to output to the log. -->
-        <message value="Configured Extract Device ID filter!!!" />
-    </messages>
+<extract-device-id xmlns='http://docs.openrepose.org/repose/extract-device-id/v1.0'
+                   maas-service-uri="http://localhost:${monitoring_port}" cache-timeout-millis="10">
 </extract-device-id>
