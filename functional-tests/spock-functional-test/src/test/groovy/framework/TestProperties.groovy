@@ -95,12 +95,12 @@ class TestProperties {
             reposeVersion = properties.getProperty("repose.version")
 
             def reposeVersionMatcher = reposeVersion =~ /\.?(\d)/
+            print reposeVersion
             reposeMajorVersion = Integer.parseInt(reposeVersionMatcher[0][1] as String)
             reposeMinorVersion = Integer.parseInt(reposeVersionMatcher[1][1] as String)
             reposeFilterVersion = Integer.parseInt(reposeVersionMatcher[2][1] as String)
             reposePatchVersion = Integer.parseInt(reposeVersionMatcher[3][1] as String)
             reposeHome = properties.getProperty("repose.home")
-            mocksWar = properties.getProperty("mocks.war")
 
         } catch (Exception e) {
             throw new RuntimeException("Failure in setup of test: unable to read property files", e)

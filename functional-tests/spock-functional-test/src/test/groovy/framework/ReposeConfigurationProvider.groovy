@@ -22,6 +22,7 @@ package framework
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.FilenameUtils
 import org.linkedin.util.clock.SystemClock
+import org.apache.commons.lang3.text.StrSubstitutor
 
 /**
  * Responsible for applying and updating configuration files for an instance of Repose

@@ -19,7 +19,6 @@
  */
 package framework
 
-import framework.client.jmx.JmxClient
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
@@ -31,7 +30,6 @@ import org.openrepose.core.filter.SystemModelInterrogator
 import org.openrepose.core.systemmodel.SystemModel
 import org.rackspace.deproxy.PortFinder
 
-import javax.management.ObjectName
 import java.util.concurrent.TimeoutException
 
 import static org.linkedin.groovy.util.concurrent.GroovyConcurrentUtils.waitForCondition
@@ -92,15 +90,14 @@ class ReposeValveLauncher {
         String clusterId = params.get('clusterId', "")
         String nodeId = params.get('nodeId', "")
 
-        start(killOthersBeforeStarting, waitOnJmxAfterStarting, clusterId, nodeId)
+        start(killOthersBeforeStarting, clusterId, nodeId)
     }
 
     /**
      * TODO: need to know what node in the system model we care about. There might be many, for multiple local node testing...
      * @param killOthersBeforeStarting
-     * @param waitOnJmxAfterStarting
      */
-    void start(boolean killOthersBeforeStarting, boolean waitOnJmxAfterStarting, String clusterId, String nodeId) {
+    void start(boolean killOthersBeforeStarting, String clusterId, String nodeId) {
 
         File jarFile = new File(reposeJar)
         if (!jarFile.exists() || !jarFile.isFile()) {
@@ -143,7 +140,7 @@ class ReposeValveLauncher {
         //TODO: possibly add a -Dlog4j.configurationFile to the guy so that we can load a different log4j config for early logging
 
         //Prepended the JUL logging manager from log4j2 so I can capture JUL logs, which are things in the JVM (like JMX)
-        def cmd = "java -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Xmx1536M -Xms1024M -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/dump-${debugPort}.hprof -XX:MaxPermSize=128M $classPath $debugProps $jmxprops $jacocoProps -jar $reposeJar -c $configDir"
+        def cmd = "java -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager -Xmx1536M -Xms1024M -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/dump-${debugPort}.hprof -XX:MaxPermSize=128M $classPath $debugProps -jar $reposeJar -c $configDir"
         println("Starting repose: ${cmd}")
 
         def th = new Thread({
@@ -256,21 +253,8 @@ class ReposeValveLauncher {
             }
         }
 
-        // First query for the mbean.  The name of the mbean is partially configurable, so search for a match.
-        def HashSet cfgBean = (HashSet) jmx.getMBeans("*org.openrepose.core.services.jmx:type=ConfigurationInformation")
-        if (cfgBean == null || cfgBean.isEmpty()) {
-            return false
-        }
+        return true
 
-        def String beanName = cfgBean.iterator().next().name.toString()
-
-        //Doing the JMX invocation here, because it's kinda ugly
-        Object[] opParams = [clusterId, nodeId]
-        String[] opSignature = [String.class.getName(), String.class.getName()]
-
-        //Invoke the 'is repose ready' bit on it
-        def nodeIsReady = jmx.server.invoke(new ObjectName(beanName), "isNodeReady", opParams, opSignature)
-        return nodeIsReady
     }
 
     public boolean isUp() {
