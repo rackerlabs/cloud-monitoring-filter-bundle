@@ -44,6 +44,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+
+        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <scope>test</scope>
@@ -62,7 +68,6 @@
             <artifactId>org.linkedin.util-groovy</artifactId>
             <version>1.8.0</version>
             <scope>test</scope>
-
         </dependency>
 
         <dependency>
