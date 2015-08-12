@@ -253,7 +253,13 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
 
     static String extractPrefixedElement(String uri, String prefix) {
         String rtn = null;
-        List<String> list = Splitter.on('/').omitEmptyStrings().splitToList(uri);
+        ////////////////////////////////////////////////////////////////////////////////
+        // @TODO: The splitToList() method was added in Guava v15.0 and Repose 7.x uses v14.0.1
+        //List<String> list = Splitter.on('/').omitEmptyStrings().splitToList(uri);
+        Iterable<String> iterator = Splitter.on('/').omitEmptyStrings().split(uri);
+        List<String> list = new ArrayList<>();
+        iterator.forEach(list::add);
+        ////////////////////////////////////////////////////////////////////////////////
         final int idx = list.indexOf(prefix);
         if (idx >= 0 && idx + 1 < list.size()) {
             rtn = list.get(idx + 1);

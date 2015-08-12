@@ -4,6 +4,8 @@ import framework.ReposeValveTest
 import org.rackspace.deproxy.Deproxy
 import org.rackspace.deproxy.Response
 
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
+
 
 /**
  * Created by dimi5963 on 8/11/15.
@@ -39,6 +41,6 @@ class MonitoringTest  extends ReposeValveTest {
         def mc = deproxy.makeRequest([url: reposeEndpoint, headers: headers])
 
         then: "Pass all the things"
-        assert mc.receivedResponse.code == "200"
+        assert mc.receivedResponse.code == Integer.toString(SC_BAD_REQUEST)
     }
 }
