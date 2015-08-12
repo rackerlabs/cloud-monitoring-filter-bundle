@@ -19,7 +19,6 @@
  */
 package org.openrepose.filters.custom.extractdeviceid;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import org.apache.http.Header;
 import org.json.simple.JSONObject;
@@ -30,7 +29,6 @@ import org.openrepose.commons.utils.http.ServiceClientResponse;
 import org.openrepose.commons.utils.servlet.http.MutableHttpServletRequest;
 import org.openrepose.commons.utils.servlet.http.MutableHttpServletResponse;
 import org.openrepose.core.filter.FilterConfigHelper;
-import org.openrepose.core.filter.logic.FilterDirector;
 import org.openrepose.core.services.config.ConfigurationService;
 import org.openrepose.core.services.datastore.Datastore;
 import org.openrepose.core.services.datastore.DatastoreService;
@@ -46,20 +44,25 @@ import javax.inject.Named;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Clock;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
+import static javax.servlet.http.HttpServletResponse.*;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.HttpHeaders.RETRY_AFTER;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.openrepose.core.filter.logic.FilterDirector.SC_TOO_MANY_REQUESTS;
 
 @Named
 public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDeviceIdConfig> {
@@ -113,7 +116,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
             throws IOException, ServletException {
         if (!initialized) {
             LOG.error("Extract Device ID filter has not yet initialized...");
-            ((HttpServletResponse) servletResponse).sendError(500);
+            ((HttpServletResponse) servletResponse).sendError(SC_INTERNAL_SERVER_ERROR); // (500)
         } else {
             MutableHttpServletRequest mutableHttpRequest = MutableHttpServletRequest.wrap((HttpServletRequest) servletRequest);
             MutableHttpServletResponse mutableHttpResponse = MutableHttpServletResponse.wrap(mutableHttpRequest, (HttpServletResponse) servletResponse);
@@ -134,7 +137,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
 
     @Override
     public void configurationUpdated(ExtractDeviceIdConfig configurationObject) {
-        delegatingQuality = Optional.of(configurationObject.getDelegating()).map(DelegatingType::getQuality);
+        delegatingQuality = Optional.ofNullable(configurationObject.getDelegating()).map(DelegatingType::getQuality);
         maasServiceUri = configurationObject.getMaasServiceUri();
         cacheTimeoutMillis = configurationObject.getCacheTimeoutMillis();
         initialized = true;
@@ -174,7 +177,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                 if (deviceId == null) {
                     final String authToken = httpServletRequest.getHeader(X_AUTH_TOKEN);
                     final Map<String, String> headers = new HashMap<>();
-                    headers.put(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON);
+                    headers.put(ACCEPT, APPLICATION_JSON);
                     headers.put(X_AUTH_TOKEN, authToken);
                     final String tenantId = httpServletRequest.getHeader(X_TENANT_ID);
                     if (tenantId != null) {
@@ -182,15 +185,15 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                     }
                     try {
                         final ServiceClientResponse serviceClientResponse = akkaServiceClient.get(
-                                authToken + entityId,
-                                maasServiceUri + httpServletRequest.getRequestURI(),
+                                authToken + "_" + entityId,
+                                maasServiceUri + new URI(httpServletRequest.getRequestURI()).getPath(),
                                 headers
                         );
                         if (serviceClientResponse != null) {
                             switch (serviceClientResponse.getStatus()) {
-                                case HttpServletResponse.SC_OK: // 200
+                                case SC_OK: // (200)
                                     try (InputStream is = serviceClientResponse.getData();
-                                         Reader reader = new InputStreamReader(is, Charsets.UTF_8)) {
+                                         Reader reader = new InputStreamReader(is, UTF_8)) {
                                         JSONObject jsonObject = (JSONObject) new JSONParser().parse(reader);
                                         String entityUri = (String) jsonObject.get("uri");
                                         deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
@@ -204,27 +207,33 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                                         }
                                     } catch (IOException e) {
                                         LOG.debug("Failed to open the Entity Resource response stream.", e);
-                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // 500
+                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                                     } catch (ParseException e) {
                                         LOG.debug("Failed to parse the Entity Resource response stream.", e);
-                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // 500
+                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                                     }
                                     break;
-                                case HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE: // 413
-                                case FilterDirector.SC_TOO_MANY_REQUESTS:             // 429
-                                    final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), HttpServletResponse.SC_SERVICE_UNAVAILABLE);  // 503
-                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_SERVICE_UNAVAILABLE, retryString); // 503
+                                case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
+                                case SC_TOO_MANY_REQUESTS:          // (429)
+                                    final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
+                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_SERVICE_UNAVAILABLE, retryString); // (503)
+                                    if (!rtn) {
+                                        httpServletResponse.addHeader(RETRY_AFTER, retryString);
+                                    }
                                     break;
                                 default:
-                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // 500
+                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                             }
                         } else {
                             LOG.debug("Failed to obtain the Entity Resource response.");
-                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // 500
+                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                         }
+                    } catch (URISyntaxException e) {
+                        LOG.debug("Inbound request URI was malformed.", e);
+                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                     } catch (AkkaServiceClientException e) {
                         LOG.debug("Failed to obtain the Entity Resource response.", e);
-                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // 500
+                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                     }
                 }
                 // IF we have a Device ID, THEN put it in the header.
@@ -233,11 +242,11 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                 }
             } else {
                 // No X_AUTH_TOKEN header
-                rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_UNAUTHORIZED, "Not Authenticated."); // 401
+                rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_UNAUTHORIZED, "Not Authenticated."); // (401)
             }
         } else {
             // No Entity ID in the URI
-            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, HttpServletResponse.SC_BAD_REQUEST, "No Entity ID in the URI."); // 400
+            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_BAD_REQUEST, "No Entity ID in the URI."); // (400)
         }
         return rtn;
     }
@@ -254,14 +263,14 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
 
     static String getRetryString(Header[] headers, int statusCode) {
         String rtn;
-        Object[] retryHeaders = Arrays.stream(headers).filter(header -> header.getName().equals(HttpHeaders.RETRY_AFTER)).toArray();
+        Object[] retryHeaders = Arrays.stream(headers).filter(header -> header.getName().equals(RETRY_AFTER)).toArray();
         if (retryHeaders.length < 1) {
-            LOG.info("Missing {} header on Auth Response status code: {}", HttpHeaders.RETRY_AFTER, statusCode);
+            LOG.info("Missing {} header on Auth Response status code: {}", RETRY_AFTER, statusCode);
             final ZonedDateTime zdt = ZonedDateTime.now(Clock.systemUTC());
             zdt.plusSeconds(5);
             rtn = zdt.format(RFC_1123_DATE_TIME);
         } else {
-            rtn = ((Header)retryHeaders[0]).getValue();
+            rtn = ((Header) retryHeaders[0]).getValue();
         }
         return rtn;
     }
