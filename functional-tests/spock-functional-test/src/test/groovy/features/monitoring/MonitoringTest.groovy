@@ -39,6 +39,6 @@ class MonitoringTest  extends ReposeValveTest {
         def mc = deproxy.makeRequest([url: reposeEndpoint, headers: headers])
 
         then: "Pass all the things"
-        assert true
+        assert mc.receivedResponse.code == "200"
     }
 }

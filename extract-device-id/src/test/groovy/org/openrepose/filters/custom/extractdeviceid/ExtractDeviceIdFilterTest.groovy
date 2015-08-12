@@ -215,6 +215,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         "maas.com/this/is/an/"                    | "entity"   | null
         "maas.com/accounts/tenantid/devices/dees" | "devices"  | "dees"
         "maas.com/accounts/tenantid/devices/"     | "devices"  | null
+        "/"                                       | "entity"   | null
     }
 
     def 'extracts the value of the Retry-After header from the middle'() {
