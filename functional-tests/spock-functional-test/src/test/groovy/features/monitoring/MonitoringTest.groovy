@@ -62,7 +62,13 @@ class MonitoringTest  extends ReposeValveTest {
         ""          | "GET"         | "/entity/123"  | "401"        | "Not Authenticated."                       | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
         ""          | "GET"         | "/entity/234"  | "200"        | "OK"                                       | ['x-auth-token': '123']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
         ""          | "GET"         | "/entity/345"  | "200"        | "OK"                                       | ['X-Auth-Token': '234']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        ""          | "GET"         | "/entity/234"  | "200"        | "OK"                                       | ['x-auth-token': '123', "x-tenant-id": '123']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        ""          | "GET"         | "/entity/345"  | "200"        | "OK"                                       | ['X-Auth-Token': '234', "x-tenant-id": '234']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
         ""          | "GET"         | "/entity/456"  | "500"        | "Invalid response from monitoring service" | ['X-Auth-Token': '345']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity/567"  | "500"        | "Unknown Error"                            | ['x-auth-token': '456']  | { return new Response(404, "Not Found") }
+        ""          | "GET"         | "/entity/678"  | "500"        | "Unknown Error"                            | ['X-Auth-Token': '567']  | { return new Response(404, "Not Found") }
+        ""          | "GET"         | "/entity/789"  | "500"        | "Unknown Error"                            | ['x-auth-token': '678']  | { return new Response(500, "Internal Server Error") }
+        ""          | "GET"         | "/entity/890"  | "500"        | "Unknown Error"                            | ['X-Auth-Token': '789']  | { return new Response(500, "Internal Server Error") }
     }
 
 
