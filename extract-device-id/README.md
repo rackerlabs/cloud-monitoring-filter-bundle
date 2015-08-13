@@ -33,12 +33,12 @@ Proceeding filters:
 
 ## Configurable parameters
 | Elements          | Attributes           | Required/Optional | Description |
-|:----------------- |:--------------------:|:-----------------:|:------------------------------------------------------------------------------------------------------------ |
-| extract-device-id |                      | Required          | Specifies the sub-elements and attributes to define this configuration.                                      |
-|                   | maas-service-uri     | Required          | Specifies the endpoint location of the MaaS API service to connect to.                                       |
-|                   | cache-timeout-millis | Optional          | The Time To Live (TTL) for caching of MaaS Entity/Device ID data. *{Default is **0**. (i.e. **Disabled** ) }*|
-| delegating        |                      | Optional          | If present, then delegating is enabled.                                                                      |
-|                   | quality              | Optional          | Sets the quality factor used by the [Delegation Response Processor (DeRP) filter](https://repose.atlassian.net/wiki/display/REPOSE/Delegation+Response+Processor+%28DeRP%29+Filter). *{Default is **0.2** }* |
+|:----------------- |:--------------------:|:-----------------:|:------------------------------------------------------------------------------------------------------- |
+| extract-device-id |                      | Required          | Specifies the sub-elements and attributes to define this configuration.                                 |
+|                   | maas-service-uri     | Required          | Specifies the endpoint location of the MaaS API service to connect to.                                  |
+|                   | cache-timeout-millis | Optional          | The Time To Live (TTL) for caching of MaaS Entity/Device ID data. Default is **0**. (i.e. **Disabled**) |
+| delegating        |                      | Optional          | If present, then delegating is enabled.                                                                 |
+|                   | quality              | Optional          | Sets the quality factor used by the [Delegation Response Processor (DeRP) filter](https://repose.atlassian.net/wiki/display/REPOSE/Delegation+Response+Processor+%28DeRP%29+Filter). Default is **0.2** |
 
 ## Return codes and conditions
 * 400 - **Bad Request**
