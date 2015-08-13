@@ -211,10 +211,6 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                                     } catch (ParseException e) {
                                         LOG.debug("Failed to parse the Entity Resource response stream.", e);
                                         rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                                    } catch (NullPointerException e) {
-                                        LOG.debug("Monitoring service provided invalid Entity Resource response stream.", e);
-                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse,
-                                                SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
                                     }
                                     break;
                                 case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
@@ -257,16 +253,18 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
 
     static String extractPrefixedElement(String uri, String prefix) {
         String rtn = null;
-        ////////////////////////////////////////////////////////////////////////////////
-        // @TODO: The splitToList() method was added in Guava v15.0 and Repose 7.x uses v14.0.1
-        //List<String> list = Splitter.on('/').omitEmptyStrings().splitToList(uri);
-        Iterable<String> iterable = Splitter.on('/').omitEmptyStrings().split(uri);
-        List<String> list = new ArrayList<>();
-        iterable.forEach(list::add);
-        ////////////////////////////////////////////////////////////////////////////////
-        final int idx = list.indexOf(prefix);
-        if (idx >= 0 && idx + 1 < list.size()) {
-            rtn = list.get(idx + 1);
+        if (uri != null) {
+            ////////////////////////////////////////////////////////////////////////////////
+            // @TODO: The splitToList() method was added in Guava v15.0 and Repose 7.x uses v14.0.1
+            //List<String> list = Splitter.on('/').omitEmptyStrings().splitToList(uri);
+            Iterable<String> iterable = Splitter.on('/').omitEmptyStrings().split(uri);
+            List<String> list = new ArrayList<>();
+            iterable.forEach(list::add);
+            ////////////////////////////////////////////////////////////////////////////////
+            final int idx = list.indexOf(prefix);
+            if (idx >= 0 && idx + 1 < list.size()) {
+                rtn = list.get(idx + 1);
+            }
         }
         return rtn;
     }
