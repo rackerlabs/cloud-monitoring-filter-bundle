@@ -171,11 +171,11 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         final String entityId = ExtractDeviceIdFilter.extractPrefixedElement(httpServletRequest.getRequestURI(), "entity");
         if (entityId != null) {
             // This filter requires an X_AUTH_TOKEN header.
-            if (Collections.list(httpServletRequest.getHeaderNames()).contains(X_AUTH_TOKEN)) {
+            final String authToken = httpServletRequest.getHeader(X_AUTH_TOKEN);
+            if (authToken != null) {
                 String deviceId = (String) datastore.get(DEVICE_ID_KEY_PREFIX + entityId);
                 // IF the Device ID is not cached, THEN try to get it.
                 if (deviceId == null) {
-                    final String authToken = httpServletRequest.getHeader(X_AUTH_TOKEN);
                     final Map<String, String> headers = new HashMap<>();
                     headers.put(ACCEPT, APPLICATION_JSON);
                     headers.put(X_AUTH_TOKEN, authToken);
