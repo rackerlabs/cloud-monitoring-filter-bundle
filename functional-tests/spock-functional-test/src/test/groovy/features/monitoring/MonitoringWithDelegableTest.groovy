@@ -6,9 +6,6 @@ import org.rackspace.deproxy.Endpoint
 import org.rackspace.deproxy.Response
 import spock.lang.Unroll
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST
-
-
 /**
  * Created by dimi5963 on 8/11/15.
  */
@@ -59,19 +56,17 @@ class MonitoringWithDelegableTest  extends ReposeValveTest {
 
         where:
 
-        requestBody | requestMethod | requestURI     | responseCode | responseMessage            | headers                  | delegatedHeaderExists | delegatedHeaderValue                                                                 | monitoringResponse
-        ""          | "GET"         | "/"            | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2" | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        "BLAH"      | "POST"        | "/"            | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2" | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity"      | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2" | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/123"  | "200"        | "OK"                       | []                       | true                  | "status_code=401`component=Extract Device ID`message=Not Authenticated.;q=0.2"       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/234"  | "200"        | "OK"                       | ['x-auth-token': '123']  | false                 | null                                                                                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
-        ""          | "GET"         | "/entity/345"  | "200"        | "OK"                       | ['X-Auth-Token': '234']  | false                 | null                                                                                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        requestBody | requestMethod | requestURI     | responseCode | responseMessage            | headers                  | delegatedHeaderExists | delegatedHeaderValue                                                                                 | monitoringResponse
+        ""          | "GET"         | "/"            | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2"                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        "BLAH"      | "POST"        | "/"            | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2"                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity"      | "200"        | "OK"                       | []                       | true                  | "status_code=400`component=Extract Device ID`message=No Entity ID in the URI.;q=0.2"                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity/123"  | "200"        | "OK"                       | []                       | true                  | "status_code=401`component=Extract Device ID`message=Not Authenticated.;q=0.2"                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity/234"  | "200"        | "OK"                       | ['x-auth-token': '123']  | false                 | null                                                                                                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        ""          | "GET"         | "/entity/345"  | "200"        | "OK"                       | ['X-Auth-Token': '234']  | false                 | null                                                                                                 | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
         ""          | "GET"         | "/entity/456"  | "200"        | "OK"                       | ['X-Auth-Token': '345']  | true                  | "status_code=500`component=Extract Device ID`message=Invalid response from monitoring service;q=0.2" | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/567"  | "200"        | "OK"                       | ['x-auth-token': '456']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2" | { return new Response(404, "Not Found") }
-        ""          | "GET"         | "/entity/678"  | "200"        | "OK"                       | ['X-Auth-Token': '567']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2" | { return new Response(404, "Not Found") }
-        ""          | "GET"         | "/entity/789"  | "200"        | "OK"                       | ['x-auth-token': '678']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2" | { return new Response(500, "Internal Server Error") }
-        ""          | "GET"         | "/entity/890"  | "200"        | "OK"                       | ['X-Auth-Token': '789']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2" | { return new Response(500, "Internal Server Error") }
+        ""          | "GET"         | "/entity/567"  | "200"        | "OK"                       | ['x-auth-token': '456']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2"                            | { return new Response(404, "Not Found") }
+        ""          | "GET"         | "/entity/678"  | "200"        | "OK"                       | ['X-Auth-Token': '567']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2"                            | { return new Response(404, "Not Found") }
+        ""          | "GET"         | "/entity/789"  | "200"        | "OK"                       | ['x-auth-token': '678']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2"                            | { return new Response(500, "Internal Server Error") }
+        ""          | "GET"         | "/entity/890"  | "200"        | "OK"                       | ['X-Auth-Token': '789']  | true                  | "status_code=500`component=Extract Device ID`message=Unknown Error;q=0.2"                            | { return new Response(500, "Internal Server Error") }
     }
-
-
 }

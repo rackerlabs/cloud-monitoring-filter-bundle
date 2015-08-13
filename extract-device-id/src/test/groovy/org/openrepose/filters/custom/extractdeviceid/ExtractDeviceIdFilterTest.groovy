@@ -216,6 +216,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         "maas.com/accounts/tenantid/devices/dees" | "devices"  | "dees"
         "maas.com/accounts/tenantid/devices/"     | "devices"  | null
         "/"                                       | "entity"   | null
+        null                                      | "entity"   | null
     }
 
     def 'extracts the value of the Retry-After header from the middle'() {
@@ -317,6 +318,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     }
 
     def 'Add a Auth Token and Tenant ID Headers to the MaaS request if the original request had them'() {
+        given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entity/" + entityId
@@ -347,7 +349,55 @@ public class ExtractDeviceIdFilterTest extends Specification {
         assertEquals tenantId, (filterChain.request as HttpServletRequest).getHeader("X-Tenant-Id")
     }
 
+    @Unroll
+    def 'Return/Add an expected Internal Server Error (500) if the MaaS request doesn\'t contain a Device ID [delegating = #delegating]'() {
+        given:
+        if (delegating) {
+            config.delegating = delegatingType
+        }
+        def entityId = UUID.randomUUID().toString()
+        def requestPath = "/tenantid/entity/" + entityId
+        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def authToken = UUID.randomUUID().toString()
+        def tenantId = UUID.randomUUID().toString()
+        httpServletRequest.addHeader "X-Auth-Token", authToken
+        httpServletRequest.addHeader "X-Tenant-Id", tenantId
+        config.cacheTimeoutMillis = 60000
+        LOG.debug config.toString()
+
+        when(mockAkkaServiceClient.get(
+                anyString(),
+                eq(config.maasServiceUri + requestPath),
+                anyMapOf(String.class, String.class)
+        )).thenReturn new ServiceClientResponse(
+                SC_OK,  // (200)
+                [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices"}""".stripMargin().stripIndent().bytes)
+        )
+
+        when:
+        filter.configurationUpdated config
+        filter.doFilter httpServletRequest, httpServletResponse, filterChain
+
+        then:
+        if (delegating) {
+            assertEquals SC_OK, httpServletResponse.status // (200)
+            assertThat "Should add proper delegation header",
+                    (filterChain.request as HttpServletRequest).getHeader("X-Delegated"),
+                    isFormatted(SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service", delegatingType.quality) // (500)
+        } else {
+            assertEquals SC_INTERNAL_SERVER_ERROR, httpServletResponse.status // (500)
+        }
+        listAppender.events.find {
+            it.message.formattedMessage.contains "Invalid response from monitoring service"
+        }
+
+        where:
+        delegating << [true, false]
+    }
+
     def 'Put the entityID/deviceID in the cache if enabled'() {
+        given:
         def keyCaptor = ArgumentCaptor.forClass(String.class)
         def valueCaptor = ArgumentCaptor.forClass(Serializable.class)
         def ttlCaptor = ArgumentCaptor.forClass(Integer.class)
@@ -383,6 +433,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     }
 
     def 'Don\'t put the entityID/deviceID in the cache if disabled'() {
+        given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entity/" + entityId

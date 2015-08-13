@@ -197,13 +197,18 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                                         JSONObject jsonObject = (JSONObject) new JSONParser().parse(reader);
                                         String entityUri = (String) jsonObject.get("uri");
                                         deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
-                                        if (cacheTimeoutMillis > 0) {
-                                            datastore.put(
-                                                    DEVICE_ID_KEY_PREFIX + entityId,
-                                                    deviceId,
-                                                    cacheTimeoutMillis,
-                                                    TimeUnit.MILLISECONDS
-                                            );
+                                        if (deviceId != null) {
+                                            if (cacheTimeoutMillis > 0) {
+                                                datastore.put(
+                                                        DEVICE_ID_KEY_PREFIX + entityId,
+                                                        deviceId,
+                                                        cacheTimeoutMillis,
+                                                        TimeUnit.MILLISECONDS
+                                                );
+                                            }
+                                        } else {
+                                            LOG.debug("Invalid response from monitoring service.");
+                                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
                                         }
                                     } catch (IOException e) {
                                         LOG.debug("Failed to open the Entity Resource response stream.", e);
