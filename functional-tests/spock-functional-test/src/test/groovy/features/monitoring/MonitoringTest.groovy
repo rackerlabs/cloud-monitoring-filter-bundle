@@ -55,13 +55,15 @@ class MonitoringTest  extends ReposeValveTest {
 
         where:
 
-        requestBody | requestMethod | requestURI     | responseCode | responseMessage            | headers                  | monitoringResponse
-        ""          | "GET"         | "/"            | "400"        | "No Entity ID in the URI." | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        "BLAH"      | "POST"        | "/"            | "400"        | "No Entity ID in the URI." | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity"      | "400"        | "No Entity ID in the URI." | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/123"  | "401"        | "Not Authenticated."       | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/123"  | "401"        | "Not Authenticated."       | ['x-auth-token': '123']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
-        ""          | "GET"         | "/entity/123"  | "200"        | "OK"                       | ['X-Auth-Token': '123']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
-        ""          | "GET"         | "/entity/123"  | "500"        | "Server Error"             | ['X-Auth-Token': '456']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        requestBody | requestMethod | requestURI     | responseCode | responseMessage                            | headers                  | monitoringResponse
+        ""          | "GET"         | "/"            | "400"        | "No Entity ID in the URI."                 | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        "BLAH"      | "POST"        | "/"            | "400"        | "No Entity ID in the URI."                 | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity"      | "400"        | "No Entity ID in the URI."                 | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity/123"  | "401"        | "Not Authenticated."                       | []                       | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
+        ""          | "GET"         | "/entity/234"  | "200"        | "OK"                                       | ['x-auth-token': '123']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        ""          | "GET"         | "/entity/345"  | "200"        | "OK"                                       | ['X-Auth-Token': '234']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"uri\":\"devices/123\"}") }
+        ""          | "GET"         | "/entity/456"  | "500"        | "Invalid response from monitoring service" | ['X-Auth-Token': '345']  | { return new Response(200, "ok", ["content-type": "application/json"], "{\"test\":\"data\"}") }
     }
+
+
 }

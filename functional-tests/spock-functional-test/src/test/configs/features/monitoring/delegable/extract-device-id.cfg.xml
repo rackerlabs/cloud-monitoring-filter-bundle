@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<extract-device-id xmlns='http://docs.openrepose.org/repose/extract-device-id/v1.0'
+                   maas-service-uri="http://localhost:${monitoringPort}" cache-timeout-millis="10">
+    <delegating quality="0.2"></delegating>
+</extract-device-id>
