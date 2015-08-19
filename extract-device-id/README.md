@@ -19,7 +19,7 @@ Headers:
 
 Preceding filters:
 
-* This filter requires a preceding filter(s) to provide the *X-Auth-Token* header.
+* This filter has no required preceding filters as long as the *X-Auth-Token* header is provided.
 
 Proceeding filters:
 
