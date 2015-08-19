@@ -4,11 +4,9 @@
 The Extract Device ID filter provides a way to query the Monitoring as a Service (MaaS) API to obtain a Device ID based on the Entity ID in the URL. 
 
 ## General filter information
-Filter name: simple-rbac
+Filter name: extract-device-id
 
 Filter configuration file: extract-device-id.cfg.xml
-
-Filter configuration example: extract-device-id.xsd
 
 Release: 1.0
 
