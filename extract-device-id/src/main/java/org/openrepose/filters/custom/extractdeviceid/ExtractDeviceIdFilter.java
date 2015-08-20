@@ -149,28 +149,11 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         return initialized;
     }
 
-    /*
-     * Extract the Entity ID from the request.
-     * - The Entity ID is the path element immediately following "entity"
-     * Then make a GET call to the MaaS API.
-     * - The call is the same as the original except it is a GET.
-     * - The X-Auth-Token header from the original request is required.
-     * - The X-Tenant-Id header from the original request is required if present.
-     * Then extract the Device ID from the "uri" JSON element in the response.
-     * - The Device ID is the path element immediately following "devices"
-     * Then add the Device ID to the request as the X-Device-Id header.
-     * - This header will be used in the Valkyrie Auth filter.
-     * We will follow standard return behavior:
-     * - When we can't talk to identity: return 5nn
-     * - When we can't talk to MaaS: return 5nn
-     * - Rate Limited Responses: return temporarily unavailable
-     * Caching is configurable, turned off by default
-     */
     private boolean handleRequest(MutableHttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
         boolean rtn = true;
         final String entityId = ExtractDeviceIdFilter.extractPrefixedElement(httpServletRequest.getRequestURI(), "entity");
         if (entityId != null) {
-            // This filter requires an X_AUTH_TOKEN header.
+            // This filter requires an X-Auth-Token header.
             final String authToken = httpServletRequest.getHeader(X_AUTH_TOKEN);
             if (authToken != null) {
                 String deviceId = (String) datastore.get(DEVICE_ID_KEY_PREFIX + entityId);
@@ -180,6 +163,8 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                     headers.put(ACCEPT, APPLICATION_JSON);
                     headers.put(X_AUTH_TOKEN, authToken);
                     final String tenantId = httpServletRequest.getHeader(X_TENANT_ID);
+                    // The X-Tenant-Id header from the original request is used if present;
+                    // otherwise it is expected to have been in the original request URI.
                     if (tenantId != null) {
                         headers.put(X_TENANT_ID, tenantId);
                     }
@@ -198,6 +183,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                                         String entityUri = (String) jsonObject.get("uri");
                                         deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
                                         if (deviceId != null) {
+                                            // Caching is configurable and turned off by default.
                                             if (cacheTimeoutMillis > 0) {
                                                 datastore.put(
                                                         DEVICE_ID_KEY_PREFIX + entityId,
@@ -246,7 +232,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                     httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
                 }
             } else {
-                // No X_AUTH_TOKEN header
+                // No X-Auth-Token header
                 rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_UNAUTHORIZED, "Not Authenticated."); // (401)
             }
         } else {
