@@ -539,43 +539,6 @@ public class ExtractDeviceIdFilterTest extends Specification {
     }
 
     @Unroll
-    def 'Return/Add an Internal Server Error (500) if the AkkaServiceClient fails [delegating = #delegating]'() {
-        given:
-        if (delegating) {
-            config.delegating = delegatingType
-        }
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + UUID.randomUUID()
-        httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
-        LOG.debug config.toString()
-
-        when(mockAkkaServiceClient.get(
-                anyString(),
-                anyString(),
-                anyMapOf(String.class, String.class)
-        )).thenReturn null
-
-        when:
-        filter.configurationUpdated config
-        filter.doFilter httpServletRequest, httpServletResponse, filterChain
-
-        then:
-        if (delegating) {
-            assertEquals SC_OK, httpServletResponse.status // (200)
-            assertThat "Should add proper delegation header",
-                    (filterChain.request as HttpServletRequest).getHeader("X-Delegated"),
-                    isFormatted(SC_INTERNAL_SERVER_ERROR, "", delegatingType.quality) // (500)
-        } else {
-            assertEquals SC_INTERNAL_SERVER_ERROR, httpServletResponse.status // (500)
-        }
-        listAppender.events.find {
-            it.message.formattedMessage.contains "Failed to obtain"
-        }
-
-        where:
-        delegating << [true, false]
-    }
-
-    @Unroll
     def 'Add a Device ID Header to the request if one is returned in the MaaS response [delegating = #delegating]'() {
         given:
         if (delegating) {
