@@ -9,6 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Cloud Monitoring - Functional Tests</name>
     <artifactId>spock-functional-test</artifactId>
 
     <properties>
@@ -23,11 +24,11 @@
         <repose.container>valve</repose.container>
 
         <!-- these will all need to change! -->
-        <project.set.dir>${project.basedir}/../..</project.set.dir>
-        <project.support.dir>${project.basedir}/../../../repose-support</project.support.dir>
+        <project.set.dir>${project.basedir}/..</project.set.dir>
+        <project.support.dir>${project.basedir}/../../repose-support</project.support.dir>
 
         <dependency.dir>${project.basedir}/target/dependency</dependency.dir>
-        <custom-bundle.dir>${project.basedir}/../../custom-bundle/target</custom-bundle.dir>
+        <custom-bundle.dir>${project.basedir}/../custom-bundle/target</custom-bundle.dir>
 
         <repose.valve.jar>valve.jar</repose.valve.jar>
         <filter.ear>filter-bundle-*.ear</filter.ear>
@@ -181,10 +182,7 @@
             </testResource>
         </testResources>
 
-
         <plugins>
-
-
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
