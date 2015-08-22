@@ -58,13 +58,13 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE
 import static javax.ws.rs.core.HttpHeaders.RETRY_AFTER
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON
 import static org.junit.Assert.*
-import static org.mockito.Matchers.*
 import static org.mockito.Mockito.*
 import static org.openrepose.core.filter.logic.FilterDirector.SC_TOO_MANY_REQUESTS
 
 public class ExtractDeviceIdFilterTest extends Specification {
     def LOG = LoggerFactory.getLogger(this.class)
     def COMPONENT = "Extract Device ID"
+    def ORIG_ENDPOINT = "http://www.example.com"
     def ExtractDeviceIdFilter filter
     def ExtractDeviceIdConfig config
     def DelegatingType delegatingType
@@ -358,9 +358,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
     def 'Add a Auth Token and Tenant ID Headers to the MaaS request if the original request had them'() {
         given:
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
         httpServletRequest.addHeader "X-Auth-Token", authToken
@@ -369,7 +371,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         LOG.debug config.toString()
 
         when(mockAkkaServiceClient.get(
-                anyString(),
+                eq(ORIG_ENDPOINT + requestPath),
                 eq(config.maasServiceUri + requestPath),
                 anyMapOf(String.class, String.class)
         )).thenReturn new ServiceClientResponse(
@@ -394,8 +396,10 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
         httpServletRequest.addHeader "X-Auth-Token", authToken
@@ -441,9 +445,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
         def ttlCaptor = ArgumentCaptor.forClass(Integer.class)
         def timeUnitCaptor = ArgumentCaptor.forClass(TimeUnit.class)
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         config.cacheTimeoutMillis = 60000
         LOG.debug config.toString()
@@ -473,9 +479,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
     def 'Don\'t put the entityID/deviceID in the cache if disabled'() {
         given:
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -545,9 +553,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -579,9 +589,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
         if (delegating) {
             config.delegating = delegatingType
         }
-        def entityId = UUID.randomUUID()
+        def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -623,8 +635,10 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -667,8 +681,10 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         def retryString = ZonedDateTime.now().format(RFC_1123_DATE_TIME)
         LOG.debug config.toString()
@@ -719,8 +735,10 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
         def requestPath = "/tenantid/entities/" + entityId
-        httpServletRequest.requestURI = "http://www.example.com" + requestPath
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
