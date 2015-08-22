@@ -207,16 +207,54 @@ public class ExtractDeviceIdFilterTest extends Specification {
         assertEquals extracted, ExtractDeviceIdFilter.extractPrefixedElement(uri, extracting)
 
         where:
-        uri                                       | extracting | extracted
-        "maas.com/entity/foo"                     | "entity"   | "foo"
-        "maas.com/tenantid/entity/foo/alarm/bar"  | "entity"   | "foo"
-        "maas.com/tenantid/entity/foo/check/baz"  | "entity"   | "foo"
-        "maas.com/this/is/an/entity/"             | "entity"   | null
-        "maas.com/this/is/an/"                    | "entity"   | null
-        "maas.com/accounts/tenantid/devices/dees" | "devices"  | "dees"
-        "maas.com/accounts/tenantid/devices/"     | "devices"  | null
-        "/"                                       | "entity"   | null
-        null                                      | "entity"   | null
+        uri                                                    | extracting | extracted
+        "maas.com/entities/someId"                             | "entities" | "someId"
+        "maas.com/tenantId/entities/someId"                    | "entities" | "someId"
+        "maas.com/entities/someId/checks"                      | "entities" | "someId"
+        "maas.com/tenantId/entities/someId/checks"             | "entities" | "someId"
+        "maas.com/entities/someId/checks/someotherid"          | "entities" | "someId"
+        "maas.com/tenantId/entities/someId/checks/someotherid" | "entities" | "someId"
+        "maas.com/entities/someId/alarms"                      | "entities" | "someId"
+        "maas.com/tenantId/entities/someId/alarms"             | "entities" | "someId"
+        "maas.com/entities/someId/alarms/someotherid"          | "entities" | "someId"
+        "maas.com/tenantId/entities/someId/alarms/someotherid" | "entities" | "someId"
+        "maas.com/someId"                                      | "entities" | null
+        "maas.com/tenantId/someId"                             | "entities" | null
+        "maas.com/someId/checks"                               | "entities" | null
+        "maas.com/tenantId/someId/checks"                      | "entities" | null
+        "maas.com/someId/checks/someotherid"                   | "entities" | null
+        "maas.com/tenantId/someId/checks/someotherid"          | "entities" | null
+        "maas.com/someId/alarms"                               | "entities" | null
+        "maas.com/tenantId/someId/alarms"                      | "entities" | null
+        "maas.com/someId/alarms/someotherid"                   | "entities" | null
+        "maas.com/tenantId/someId/alarms/someotherid"          | "entities" | null
+        "maas.com/devices/someId"                              | "devices"  | "someId"
+        "maas.com/tenantId/devices/someId"                     | "devices"  | "someId"
+        "maas.com/devices/someId/checks"                       | "devices"  | "someId"
+        "maas.com/tenantId/devices/someId/checks"              | "devices"  | "someId"
+        "maas.com/devices/someId/checks/someotherid"           | "devices"  | "someId"
+        "maas.com/tenantId/devices/someId/checks/someotherid"  | "devices"  | "someId"
+        "maas.com/devices/someId/alarms"                       | "devices"  | "someId"
+        "maas.com/tenantId/devices/someId/alarms"              | "devices"  | "someId"
+        "maas.com/devices/someId/alarms/someotherid"           | "devices"  | "someId"
+        "maas.com/tenantId/devices/someId/alarms/someotherid"  | "devices"  | "someId"
+        "maas.com/someId"                                      | "devices"  | null
+        "maas.com/tenantId/someId"                             | "devices"  | null
+        "maas.com/someId/checks"                               | "devices"  | null
+        "maas.com/tenantId/someId/checks"                      | "devices"  | null
+        "maas.com/someId/checks/someotherid"                   | "devices"  | null
+        "maas.com/tenantId/someId/checks/someotherid"          | "devices"  | null
+        "maas.com/someId/alarms"                               | "devices"  | null
+        "maas.com/tenantId/someId/alarms"                      | "devices"  | null
+        "maas.com/someId/alarms/someotherid"                   | "devices"  | null
+        "maas.com/tenantId/someId/alarms/someotherid"          | "devices"  | null
+        ""                                                     | "entities" | null
+        "/"                                                    | "entities" | null
+        "maas.com/entities/"                                   | "entities" | null
+        "maas.com/entities"                                    | "entities" | null
+        "maas.com/tenantId/entities/"                          | "entities" | null
+        "maas.com/tenantId/entities"                           | "entities" | null
+        null                                                   | "entities" | null
     }
 
     def 'extracts the value of the Retry-After header from the middle'() {
@@ -293,17 +331,17 @@ public class ExtractDeviceIdFilterTest extends Specification {
 
         where:
         delegating         | descPre           | descPost       | requestURI                                   | statusCode
-        "while delegating" | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entity"     | SC_BAD_REQUEST     // (400)
-        ""                 | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entity"     | SC_BAD_REQUEST     // (400)
-        "while delegating" | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entity/foo" | SC_UNAUTHORIZED    // (401)
-        ""                 | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entity/foo" | SC_UNAUTHORIZED    // (401)
+        "while delegating" | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entities"     | SC_BAD_REQUEST     // (400)
+        ""                 | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entities"     | SC_BAD_REQUEST     // (400)
+        "while delegating" | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entities/foo" | SC_UNAUTHORIZED    // (401)
+        ""                 | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entities/foo" | SC_UNAUTHORIZED    // (401)
     }
 
     def 'the Device ID should be added as a header'() {
         given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entity/" + entityId
+        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + entityId
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         when(mockDatastore.get("MaaS:Custom:DeviceId:" + entityId)).thenReturn deviceId
         LOG.debug config.toString()
@@ -321,7 +359,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
@@ -356,7 +394,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
@@ -404,7 +442,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         def timeUnitCaptor = ArgumentCaptor.forClass(TimeUnit.class)
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         config.cacheTimeoutMillis = 60000
@@ -436,7 +474,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
@@ -465,7 +503,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         if (delegating) {
             config.delegating = delegatingType
         }
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entity/" + UUID.randomUUID()
+        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + UUID.randomUUID()
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -506,7 +544,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         if (delegating) {
             config.delegating = delegatingType
         }
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entity/" + UUID.randomUUID()
+        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + UUID.randomUUID()
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -545,7 +583,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
@@ -579,7 +617,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
@@ -622,7 +660,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
@@ -666,7 +704,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         def retryString = ZonedDateTime.now().format(RFC_1123_DATE_TIME)
@@ -718,7 +756,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
             config.delegating = delegatingType
         }
         def entityId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entity/" + entityId
+        def requestPath = "/tenantid/entities/" + entityId
         httpServletRequest.requestURI = "http://www.example.com" + requestPath
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
