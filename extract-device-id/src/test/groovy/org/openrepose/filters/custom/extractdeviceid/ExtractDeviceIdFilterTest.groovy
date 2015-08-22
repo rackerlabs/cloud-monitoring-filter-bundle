@@ -27,8 +27,6 @@ import org.apache.logging.log4j.test.appender.ListAppender
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
-import org.junit.Rule
-import org.junit.rules.ExpectedException
 import org.mockito.ArgumentCaptor
 import org.openrepose.commons.config.manager.UpdateListener
 import org.openrepose.commons.config.resource.ConfigurationResource
@@ -261,7 +259,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     }
 
     @Unroll
-    def 'extracts from #path the MaaS path #extracted'() {
+    def 'extracts from #uri the MaaS path #extracted'() {
         assertEquals extracted, ExtractDeviceIdFilter.extractMaasPath(uri)
 
         where:
@@ -278,16 +276,16 @@ public class ExtractDeviceIdFilterTest extends Specification {
         "https://www.maas.com/tenantId/entities/someId/alarms/someotherid" | "/tenantId/entities/someId"
     }
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
     @Unroll
-    def 'throws exception when extracting path from #path'() {
-        given:
-        thrown.expect(URISyntaxException.class)
-
-        expect:
-        ExtractDeviceIdFilter.extractMaasPath(uri)
+    def 'throws URISyntaxException when extracting path from #uri'() {
+        try {
+            ExtractDeviceIdFilter.extractMaasPath(uri)
+            fail()
+        } catch (URISyntaxException ex) {
+            if (!ex.message.startsWith("Malformed MaaS address.")) {
+                fail()
+            }
+        }
 
         where:
         uri << [
@@ -416,15 +414,6 @@ public class ExtractDeviceIdFilterTest extends Specification {
         config.cacheTimeoutMillis = 60000
         LOG.debug config.toString()
 
-        when(mockAkkaServiceClient.get(
-                anyString(),
-                anyString(),
-                anyMapOf(String.class, String.class)
-        )).thenReturn new ServiceClientResponse(
-                SC_BAD_REQUEST,  // (400)
-                [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("".bytes)
-        )
         when(mockAkkaServiceClient.get(
                 anyString(),
                 eq(config.maasServiceUri + requestPath),
