@@ -27,7 +27,6 @@ import org.json.simple.parser.ParseException;
 import org.openrepose.commons.config.manager.UpdateListener;
 import org.openrepose.commons.utils.http.ServiceClientResponse;
 import org.openrepose.commons.utils.servlet.http.MutableHttpServletRequest;
-import org.openrepose.commons.utils.servlet.http.MutableHttpServletResponse;
 import org.openrepose.core.filter.FilterConfigHelper;
 import org.openrepose.core.services.config.ConfigurationService;
 import org.openrepose.core.services.datastore.Datastore;
@@ -151,85 +150,23 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
 
     private boolean handleRequest(MutableHttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
         boolean rtn = true;
-        final String entityId = ExtractDeviceIdFilter.extractPrefixedElement(httpServletRequest.getRequestURI(), "entity");
+        final String entityId = ExtractDeviceIdFilter.extractPrefixedElement(httpServletRequest.getRequestURI(), "entities");
         if (entityId != null) {
             // This filter requires an X-Auth-Token header.
             final String authToken = httpServletRequest.getHeader(X_AUTH_TOKEN);
             if (authToken != null) {
                 String deviceId = (String) datastore.get(DEVICE_ID_KEY_PREFIX + entityId);
-                // IF the Device ID is not cached, THEN try to get it.
-                if (deviceId == null) {
-                    final Map<String, String> headers = new HashMap<>();
-                    headers.put(ACCEPT, APPLICATION_JSON);
-                    headers.put(X_AUTH_TOKEN, authToken);
-                    final String tenantId = httpServletRequest.getHeader(X_TENANT_ID);
-                    // The X-Tenant-Id header from the original request is used if present;
-                    // otherwise it is expected to have been in the original request URI.
-                    if (tenantId != null) {
-                        headers.put(X_TENANT_ID, tenantId);
-                    }
-                    try {
-                        final ServiceClientResponse serviceClientResponse = akkaServiceClient.get(
-                                authToken + "_" + entityId,
-                                maasServiceUri + new URI(httpServletRequest.getRequestURI()).getPath(),
-                                headers
-                        );
-                        if (serviceClientResponse != null) {
-                            switch (serviceClientResponse.getStatus()) {
-                                case SC_OK: // (200)
-                                    try (InputStream is = serviceClientResponse.getData();
-                                         Reader reader = new InputStreamReader(is, UTF_8)) {
-                                        JSONObject jsonObject = (JSONObject) new JSONParser().parse(reader);
-                                        String entityUri = (String) jsonObject.get("uri");
-                                        deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
-                                        if (deviceId != null) {
-                                            // Caching is configurable and turned off by default.
-                                            if (cacheTimeoutMillis > 0) {
-                                                datastore.put(
-                                                        DEVICE_ID_KEY_PREFIX + entityId,
-                                                        deviceId,
-                                                        cacheTimeoutMillis,
-                                                        TimeUnit.MILLISECONDS
-                                                );
-                                            }
-                                        } else {
-                                            LOG.debug("Invalid response from monitoring service.");
-                                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
-                                        }
-                                    } catch (IOException e) {
-                                        LOG.debug("Failed to open the Entity Resource response stream.", e);
-                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                                    } catch (ParseException e) {
-                                        LOG.debug("Failed to parse the Entity Resource response stream.", e);
-                                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                                    }
-                                    break;
-                                case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
-                                case SC_TOO_MANY_REQUESTS:          // (429)
-                                    final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
-                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_SERVICE_UNAVAILABLE, retryString); // (503)
-                                    if (!rtn) {
-                                        httpServletResponse.addHeader(RETRY_AFTER, retryString);
-                                    }
-                                    break;
-                                default:
-                                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                            }
-                        } else {
-                            LOG.debug("Failed to obtain the Entity Resource response.");
-                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                        }
-                    } catch (URISyntaxException e) {
-                        LOG.debug("Inbound request URI was malformed.", e);
-                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                    } catch (AkkaServiceClientException e) {
-                        LOG.debug("Failed to obtain the Entity Resource response.", e);
-                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
-                    }
-                }
-                // IF we have a Device ID, THEN put it in the header.
+                // IF the Device ID is cached, THEN put it in the header;
+                // ELSE try to get it.
                 if (deviceId != null) {
                     httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
+                } else {
+                    rtn = getDeviceId(
+                            httpServletRequest,
+                            httpServletResponse,
+                            authToken,
+                            entityId
+                    );
                 }
             } else {
                 // No X-Auth-Token header
@@ -272,6 +209,105 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
             rtn = ((Header) retryHeaders[0]).getValue();
         }
         return rtn;
+    }
+
+    private boolean getDeviceId(
+            final MutableHttpServletRequest httpServletRequest,
+            final HttpServletResponse httpServletResponse,
+            final String authToken,
+            final String entityId
+    ) throws IOException {
+        boolean rtn = true;
+        final Map<String, String> headers = new HashMap<>();
+        headers.put(ACCEPT, APPLICATION_JSON);
+        headers.put(X_AUTH_TOKEN, authToken);
+        final String tenantId = httpServletRequest.getHeader(X_TENANT_ID);
+        // The X-Tenant-Id header from the original request is used if present;
+        // otherwise it is expected to have been in the original request URI.
+        if (tenantId != null) {
+            headers.put(X_TENANT_ID, tenantId);
+        }
+        try {
+            final ServiceClientResponse serviceClientResponse = akkaServiceClient.get(
+                    authToken + "_" + entityId,
+                    maasServiceUri + extractMaasPath(httpServletRequest.getRequestURI()),
+                    headers
+            );
+            switch (serviceClientResponse.getStatus()) {
+                case SC_OK: // (200)
+                    try (InputStream is = serviceClientResponse.getData();
+                         Reader reader = new InputStreamReader(is, UTF_8)) {
+                        JSONObject jsonObject = (JSONObject) new JSONParser().parse(reader);
+                        String entityUri = (String) jsonObject.get("uri");
+                        String deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
+                        // IF we have a Device ID, THEN cache it and put it in the header.
+                        if (deviceId != null) {
+                            // Caching is configurable and turned off by default.
+                            if (cacheTimeoutMillis > 0) {
+                                datastore.put(
+                                        DEVICE_ID_KEY_PREFIX + entityId,
+                                        deviceId,
+                                        cacheTimeoutMillis,
+                                        TimeUnit.MILLISECONDS
+                                );
+                            }
+                            httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
+                        } else {
+                            LOG.debug("Invalid response from monitoring service.");
+                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
+                        }
+                    } catch (IOException e) {
+                        LOG.debug("Failed to open the Entity Resource response stream.", e);
+                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
+                    } catch (ParseException e) {
+                        LOG.debug("Failed to parse the Entity Resource response stream.", e);
+                        rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
+                    }
+                    break;
+                case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
+                case SC_TOO_MANY_REQUESTS:          // (429)
+                    final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
+                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_SERVICE_UNAVAILABLE, retryString); // (503)
+                    if (!rtn) {
+                        httpServletResponse.addHeader(RETRY_AFTER, retryString);
+                    }
+                    break;
+                default:
+                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
+            }
+        } catch (URISyntaxException e) {
+            LOG.debug("Inbound request URI was malformed.", e);
+            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
+        } catch (AkkaServiceClientException e) {
+            LOG.debug("Failed to obtain the Entity Resource response.", e);
+            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
+        }
+        return rtn;
+    }
+
+    private static final String ENTITIES = "entities";
+    private static final int ENTITIES_LEN_MINUS_ONE = ENTITIES.length() - 1;
+    private static final int ENTITIES_LEN_PLUS_TWO = ENTITIES.length() + 2;
+    private static final String URI_SYNTAX_EXCEPTION_MESSAGE = "Malformed MaaS address.";
+
+    static String extractMaasPath(String origUri) throws URISyntaxException {
+        if (origUri == null) {
+            throw new URISyntaxException("" + null, URI_SYNTAX_EXCEPTION_MESSAGE, 0);
+        }
+        String path = new URI(origUri).getPath();
+        int idxEntities = path.indexOf(ENTITIES);
+        if (idxEntities < 0) {
+            throw new URISyntaxException(origUri, URI_SYNTAX_EXCEPTION_MESSAGE, 0);
+        } else if (path.length() < idxEntities + ENTITIES_LEN_PLUS_TWO) {
+            idxEntities = origUri.indexOf(ENTITIES);
+            throw new URISyntaxException(origUri, URI_SYNTAX_EXCEPTION_MESSAGE, idxEntities + ENTITIES_LEN_MINUS_ONE);
+        }
+        int idxEntityId = path.indexOf('/', idxEntities + ENTITIES_LEN_PLUS_TWO);
+        if (idxEntityId < 0) {
+            return path;
+        } else {
+            return path.substring(0, idxEntityId);
+        }
     }
 
     private void handleResponse(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
