@@ -27,6 +27,8 @@ import org.apache.logging.log4j.test.appender.ListAppender
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
+import org.junit.Rule
+import org.junit.rules.ExpectedException
 import org.mockito.ArgumentCaptor
 import org.openrepose.commons.config.manager.UpdateListener
 import org.openrepose.commons.config.resource.ConfigurationResource
@@ -58,6 +60,7 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE
 import static javax.ws.rs.core.HttpHeaders.RETRY_AFTER
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON
 import static org.junit.Assert.*
+import static org.mockito.Matchers.*
 import static org.mockito.Mockito.*
 import static org.openrepose.core.filter.logic.FilterDirector.SC_TOO_MANY_REQUESTS
 
@@ -257,6 +260,49 @@ public class ExtractDeviceIdFilterTest extends Specification {
         null                                                   | "entities" | null
     }
 
+    @Unroll
+    def 'extracts from #path the MaaS path #extracted'() {
+        assertEquals extracted, ExtractDeviceIdFilter.extractMaasPath(uri)
+
+        where:
+        uri                                                                | extracted
+        "https://www.maas.com/entities/someId"                             | "/entities/someId"
+        "https://www.maas.com/tenantId/entities/someId"                    | "/tenantId/entities/someId"
+        "https://www.maas.com/entities/someId/checks"                      | "/entities/someId"
+        "https://www.maas.com/tenantId/entities/someId/checks"             | "/tenantId/entities/someId"
+        "https://www.maas.com/entities/someId/checks/someotherid"          | "/entities/someId"
+        "https://www.maas.com/tenantId/entities/someId/checks/someotherid" | "/tenantId/entities/someId"
+        "https://www.maas.com/entities/someId/alarms"                      | "/entities/someId"
+        "https://www.maas.com/tenantId/entities/someId/alarms"             | "/tenantId/entities/someId"
+        "https://www.maas.com/entities/someId/alarms/someotherid"          | "/entities/someId"
+        "https://www.maas.com/tenantId/entities/someId/alarms/someotherid" | "/tenantId/entities/someId"
+    }
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
+    @Unroll
+    def 'throws exception when extracting path from #path'() {
+        given:
+        thrown.expect(URISyntaxException.class)
+
+        expect:
+        ExtractDeviceIdFilter.extractMaasPath(uri)
+
+        where:
+        uri << [
+                "https://www.maas.com/entities/",
+                "https://www.maas.com/entities",
+                "https://www.maas.com/tenantId/entities/",
+                "https://www.maas.com/tenantId/entities",
+                "https://www.maas.com/",
+                "https://www.maas.com",
+                "/",
+                "",
+                null
+        ]
+    }
+
     def 'extracts the value of the Retry-After header from the middle'() {
         given:
         def retryString = ZonedDateTime.now().format(RFC_1123_DATE_TIME)
@@ -330,7 +376,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
 
         where:
-        delegating         | descPre           | descPost       | requestURI                                   | statusCode
+        delegating         | descPre           | descPost       | requestURI                                     | statusCode
         "while delegating" | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantId/entities"     | SC_BAD_REQUEST     // (400)
         ""                 | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantId/entities"     | SC_BAD_REQUEST     // (400)
         "while delegating" | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantId/entities/foo" | SC_UNAUTHORIZED    // (401)
@@ -370,6 +416,15 @@ public class ExtractDeviceIdFilterTest extends Specification {
         config.cacheTimeoutMillis = 60000
         LOG.debug config.toString()
 
+        when(mockAkkaServiceClient.get(
+                anyString(),
+                anyString(),
+                anyMapOf(String.class, String.class)
+        )).thenReturn new ServiceClientResponse(
+                SC_BAD_REQUEST,  // (400)
+                [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
+                new ByteArrayInputStream("".bytes)
+        )
         when(mockAkkaServiceClient.get(
                 anyString(),
                 eq(config.maasServiceUri + requestPath),
@@ -426,7 +481,8 @@ public class ExtractDeviceIdFilterTest extends Specification {
             assertEquals SC_OK, httpServletResponse.status // (200)
             assertThat "Should add proper delegation header",
                     (filterChain.request as HttpServletRequest).getHeader("X-Delegated"),
-                    isFormatted(SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service", delegatingType.quality) // (500)
+                    isFormatted(SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service", delegatingType.quality)
+            // (500)
         } else {
             assertEquals SC_INTERNAL_SERVER_ERROR, httpServletResponse.status // (500)
         }
