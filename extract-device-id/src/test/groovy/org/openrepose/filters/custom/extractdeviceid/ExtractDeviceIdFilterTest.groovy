@@ -331,17 +331,17 @@ public class ExtractDeviceIdFilterTest extends Specification {
 
         where:
         delegating         | descPre           | descPost       | requestURI                                   | statusCode
-        "while delegating" | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entities"     | SC_BAD_REQUEST     // (400)
-        ""                 | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantid/entities"     | SC_BAD_REQUEST     // (400)
-        "while delegating" | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entities/foo" | SC_UNAUTHORIZED    // (401)
-        ""                 | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantid/entities/foo" | SC_UNAUTHORIZED    // (401)
+        "while delegating" | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantId/entities"     | SC_BAD_REQUEST     // (400)
+        ""                 | "an entity ID"    | "Bad Request"  | "http://www.example.com/tenantId/entities"     | SC_BAD_REQUEST     // (400)
+        "while delegating" | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantId/entities/foo" | SC_UNAUTHORIZED    // (401)
+        ""                 | "an X-Auth-Token" | "Unauthorized" | "http://www.example.com/tenantId/entities/foo" | SC_UNAUTHORIZED    // (401)
     }
 
     def 'the Device ID should be added as a header'() {
         given:
         def entityId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + entityId
+        httpServletRequest.requestURI = "http://www.example.com/tenantId/entities/" + entityId
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         when(mockDatastore.get("MaaS:Custom:DeviceId:" + entityId)).thenReturn deviceId
         LOG.debug config.toString()
@@ -355,29 +355,29 @@ public class ExtractDeviceIdFilterTest extends Specification {
         assertEquals deviceId, (filterChain.request as HttpServletRequest).getHeader("X-Device-Id")
     }
 
-    def 'Add a Auth Token and Tenant ID Headers to the MaaS request if the original request had them'() {
+    def 'Add the Auth Token and Tenant ID Headers to the MaaS request if the original request had them'() {
         given:
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
-        def requestExtra = "/alarms/" + alarmsId
-        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
+        def requestPath = "/$tenantId/entities/" + entityId
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", authToken
         httpServletRequest.addHeader "X-Tenant-Id", tenantId
         config.cacheTimeoutMillis = 60000
         LOG.debug config.toString()
 
         when(mockAkkaServiceClient.get(
-                eq(ORIG_ENDPOINT + requestPath),
+                anyString(),
                 eq(config.maasServiceUri + requestPath),
                 anyMapOf(String.class, String.class)
         )).thenReturn new ServiceClientResponse(
                 SC_OK,  // (200)
                 [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/$tenantId/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
         )
 
         when:
@@ -397,11 +397,11 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
-        def requestExtra = "/alarms/" + alarmsId
-        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         def authToken = UUID.randomUUID().toString()
         def tenantId = UUID.randomUUID().toString()
+        def requestPath = "/$tenantId/entities/" + entityId
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", authToken
         httpServletRequest.addHeader "X-Tenant-Id", tenantId
         config.cacheTimeoutMillis = 60000
@@ -414,7 +414,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         )).thenReturn new ServiceClientResponse(
                 SC_OK,  // (200)
                 [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices"}""".stripMargin().stripIndent().bytes)
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/$tenantId/devices"}""".stripMargin().stripIndent().bytes)
         )
 
         when:
@@ -447,7 +447,8 @@ public class ExtractDeviceIdFilterTest extends Specification {
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def tenantId = UUID.randomUUID().toString()
+        def requestPath = "/$tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -461,7 +462,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         )).thenReturn new ServiceClientResponse(
                 SC_OK, // (200)
                 [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/$tenantId/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
         )
 
         when:
@@ -481,7 +482,8 @@ public class ExtractDeviceIdFilterTest extends Specification {
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def tenantId = UUID.randomUUID().toString()
+        def requestPath = "/$tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -494,7 +496,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         )).thenReturn new ServiceClientResponse(
                 SC_OK, // (200)
                 [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/$tenantId/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
         )
 
         when:
@@ -511,7 +513,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         if (delegating) {
             config.delegating = delegatingType
         }
-        httpServletRequest.requestURI = "http://www.example.com/tenantid/entities/" + UUID.randomUUID()
+        httpServletRequest.requestURI = "http://www.example.com/tenantId/entities/" + UUID.randomUUID()
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
         LOG.debug config.toString()
 
@@ -555,7 +557,8 @@ public class ExtractDeviceIdFilterTest extends Specification {
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
         def deviceId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def tenantId = UUID.randomUUID().toString()
+        def requestPath = "/$tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -568,7 +571,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         )).thenReturn new ServiceClientResponse(
                 SC_OK, // (200)
                 [new BasicHeader(CONTENT_TYPE, APPLICATION_JSON)] as Header[],
-                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/tenantid/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
+                new ByteArrayInputStream("""{"uri": "http://www.maas.com/accounts/$tenantId/devices/$deviceId"}""".stripMargin().stripIndent().bytes)
         )
 
         when:
@@ -591,7 +594,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def requestPath = "/tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -636,7 +639,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def requestPath = "/tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -682,7 +685,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def requestPath = "/tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
@@ -736,7 +739,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         }
         def entityId = UUID.randomUUID().toString()
         def alarmsId = UUID.randomUUID().toString()
-        def requestPath = "/tenantid/entities/" + entityId
+        def requestPath = "/tenantId/entities/" + entityId
         def requestExtra = "/alarms/" + alarmsId
         httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
         httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
