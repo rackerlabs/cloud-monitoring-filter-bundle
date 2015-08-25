@@ -25,6 +25,12 @@ import org.linkedin.util.clock.SystemClock
 import org.apache.commons.lang3.text.StrSubstitutor
 
 /**
+ * Cloud Monitoring Custom Repose Filter
+ * Spock Functional Test Framework
+ *
+ * This framework is a copied subset of what was released with
+ * [Repose v7.4.1.0](https://github.com/rackerlabs/repose/tree/repose-7.1.4.0/repose-aggregator/functional-tests/spock-functional-test).
+ *
  * Responsible for applying and updating configuration files for an instance of Repose
  */
 class ReposeConfigurationProvider {

@@ -24,6 +24,12 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.*
 
 /**
+ * Cloud Monitoring Custom Repose Filter
+ * Spock Functional Test Framework
+ *
+ * This framework is a copied subset of what was released with
+ * [Repose v7.4.1.0](https://github.com/rackerlabs/repose/tree/repose-7.1.4.0/repose-aggregator/functional-tests/spock-functional-test).
+ *
  * Responsible for searching log file for an instance of Repose
  */
 class ReposeLogSearch {
