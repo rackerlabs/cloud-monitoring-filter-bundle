@@ -115,13 +115,13 @@ public class ExtractDeviceIdFilterTest extends Specification {
         assertEquals 0, extractDeviceIdConfig.cacheTimeoutMillis
     }
 
-    def 'The default delegating quality is 0.2'() {
+    def 'The default delegating quality is 0.5'() {
         given:
         def delegatingType = new DelegatingType()
         LOG.debug delegatingType.toString()
 
         expect:
-        assertEquals 0.2, delegatingType.quality, 0.0
+        assertEquals 0.5, delegatingType.quality, 0.0
     }
 
     def 'an un-configured filter should return an Internal Server Error (500)'() {

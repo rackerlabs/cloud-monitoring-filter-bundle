@@ -48,14 +48,14 @@
                 </html:p>
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute name="quality" type="extract-device-id:QualityType" use="optional" default="0.2">
+        <xs:attribute name="quality" type="extract-device-id:QualityType" use="optional" default="0.5">
             <xs:annotation>
                 <xs:documentation>
                     <html:p>
                         What quality you want any output headers to be.
                         When setting up a chain of delegating filters the highest quality number will be the one that is
                         eventually output.
-                        Default is 0.2
+                        Default is 0.5
                     </html:p>
                 </xs:documentation>
             </xs:annotation>
