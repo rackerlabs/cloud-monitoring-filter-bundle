@@ -60,9 +60,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <!-- @TODO Repose v7.x uses a really old version of Guava. -->
-                <!--version>18.0</version-->
-                <version>14.0.1</version>
+                <version>18.0</version>
             </dependency>
             <dependency>
                 <groupId>org.openrepose</groupId>
