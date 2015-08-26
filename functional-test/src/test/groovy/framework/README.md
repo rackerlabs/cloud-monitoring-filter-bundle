@@ -1,5 +1,5 @@
 # Cloud Monitoring Custom Repose Filter
-## Spock Functional Test Framework
+## Functional Test Framework
 <pre>
  ______     ______     ______   ______     ______     ______
 /\  == \   /\  ___\   /\  == \ /\  __ \   /\  ___\   /\  ___\

@@ -44,7 +44,7 @@
     <modules>
         <module>custom-bundle</module>
         <module>extract-device-id</module>
-        <module>spock-functional-test</module>
+        <module>functional-test</module>
     </modules>
 
     <repositories>
