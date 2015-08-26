@@ -78,11 +78,6 @@ public class ExtractDeviceIdFilterTest extends Specification {
     def ConfigurationService mockConfigService
     def ListAppender listAppender
 
-    def setupSpec() {
-        System.setProperty "javax.xml.parsers.DocumentBuilderFactory",
-                "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl"
-    }
-
     def setup() {
         httpServletRequest = new MockHttpServletRequest()
         httpServletRequest.method = "GET"
