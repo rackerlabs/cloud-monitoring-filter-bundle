@@ -15,7 +15,7 @@ Headers:
 
 * The *X-Auth-Token* request header is required.
 * IF the *X-Tenant-Id* request header is present, THEN it is passed on in the request to the MaaS API call as well.
-* This filter will populates *X-Device-Id* the response header.
+* This filter populates the *X-Device-Id* request header.
 
 Preceding filters:
 
