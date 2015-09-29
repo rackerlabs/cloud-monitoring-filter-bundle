@@ -13,11 +13,7 @@
     <artifactId>functional-test</artifactId>
 
     <properties>
-        <!--////////////////////////////////////////////////////////////////////////////////-->
-        <!-- @TODO: Updated the Repose version when it goes final so that Guava v18.0 is available. -->
-        <!--repose.version>7.1.5.0</repose.version-->
-        <repose.version>7.1.4.1-SNAPSHOT</repose.version>
-        <!--////////////////////////////////////////////////////////////////////////////////-->
+        <repose.version>7.1.5.1</repose.version>
 
         <!-- this is the version of artifacts to use from the published repose-support project -->
         <test.artifact.version>3.0</test.artifact.version>

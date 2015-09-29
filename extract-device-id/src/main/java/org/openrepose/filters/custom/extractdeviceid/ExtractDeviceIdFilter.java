@@ -69,8 +69,10 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     private static final String DEFAULT_CONFIG = "extract-device-id.cfg.xml";
     private static final String X_AUTH_TOKEN = "X-Auth-Token";
     private static final String X_TENANT_ID = "X-Tenant-Id";
+    private static final String X_ROLES = "X-Roles";
     private static final String X_DEVICE_ID = "X-Device-Id";
     private static final String X_DELEGATED = "X-Delegated";
+    private static final String INTERMEDIARY_ROLE = "monitoring:intermediary";
     private static final String DEVICE_ID_KEY_PREFIX = "MaaS:Custom:DeviceId:";
     private final ConfigurationService configurationService;
     private final AkkaServiceClient akkaServiceClient;
@@ -215,6 +217,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         final Map<String, String> headers = new HashMap<>();
         headers.put(ACCEPT, APPLICATION_JSON);
         headers.put(X_AUTH_TOKEN, authToken);
+        headers.put(X_ROLES, INTERMEDIARY_ROLE);
         final String tenantId = httpServletRequest.getHeader(X_TENANT_ID);
         // The X-Tenant-Id header from the original request is used if present;
         // otherwise it is expected to have been in the original request URI.
