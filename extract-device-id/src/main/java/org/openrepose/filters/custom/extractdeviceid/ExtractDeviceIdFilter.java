@@ -73,6 +73,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     private static final String X_DEVICE_ID = "X-Device-Id";
     private static final String X_DELEGATED = "X-Delegated";
     private static final String INTERMEDIARY_ROLE = "monitoring:intermediary";
+    private static final String UNREGISTERED_PRODUCT_ROLE = "unregistered_product";
     private static final String DEVICE_ID_KEY_PREFIX = "MaaS:Custom:DeviceId:";
     private final ConfigurationService configurationService;
     private final AkkaServiceClient akkaServiceClient;
@@ -236,22 +237,31 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                          Reader reader = new InputStreamReader(is, UTF_8)) {
                         JSONObject jsonObject = (JSONObject) new JSONParser().parse(reader);
                         String entityUri = (String) jsonObject.get("uri");
-                        String deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
-                        // IF we have a Device ID, THEN cache it and put it in the header.
-                        if (deviceId != null) {
-                            // Caching is configurable and turned off by default.
-                            if (cacheTimeoutMillis > 0) {
-                                datastore.put(
-                                        DEVICE_ID_KEY_PREFIX + entityId,
-                                        deviceId,
-                                        cacheTimeoutMillis,
-                                        TimeUnit.MILLISECONDS
-                                );
+                        if (entityUri != null && entityUri.length() > 0) {
+                            String deviceId = ExtractDeviceIdFilter.extractPrefixedElement(entityUri, "devices");
+                            // IF we have a Device ID, THEN cache it and put it in the header.
+                            if (deviceId != null) {
+                                // Caching is configurable and turned off by default.
+                                if (cacheTimeoutMillis > 0) {
+                                    datastore.put(
+                                            DEVICE_ID_KEY_PREFIX + entityId,
+                                            deviceId,
+                                            cacheTimeoutMillis,
+                                            TimeUnit.MILLISECONDS
+                                    );
+                                }
+                                httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
+                            } else {
+                                // The monitoring public API server has returned an entity with an unrecogized URI format;
+                                // this filter will reject the request
+                                LOG.debug("Invalid response from monitoring service.");
+                                rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
                             }
-                            httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
                         } else {
-                            LOG.debug("Invalid response from monitoring service.");
-                            rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
+                            // The monitoring public API server has returned an entity with no URI;
+                            // the role assigned here will be treated as pre-authorized (bypassing privilege checks) by the downstream Valkyrie filter
+                            LOG.debug("Empty URI received from monitoring service; inserting unregistered_product role.");
+                            httpServletRequest.addHeader(X_ROLES, UNREGISTERED_PRODUCT_ROLE);
                         }
                     } catch (IOException e) {
                         LOG.debug("Failed to open the Entity Resource response stream.", e);
