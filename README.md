@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/rackerlabs/cloud-monitoring-filter-bundle.svg)](https://travis-ci.org/rackerlabs/cloud-monitoring-filter-bundle)
+
 # Cloud Monitoring Custom Repose Filter Bundle
 
 This project is intended to assist Cloud Monitoring in maintaining a custom filter for Repose. 
