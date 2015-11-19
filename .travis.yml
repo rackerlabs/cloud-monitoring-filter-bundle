@@ -1,3 +1,13 @@
 language: java
 jdk:
-  - oraclejdk8
+- oraclejdk8
+deploy:
+  provider: cloudfiles
+  username: maasproject
+  api_key:
+    secure: otHvHKCr89art6D1FLv3SsRtQ56B/9BkiaZQWkFMzyQ+OUG/6Fk7xgwEBV0EbuqRv1JrBSPQI5jC4Z8DDUAQIw/L1EdefgK0k0ChNVqLhXmOyGdc7UWHUQ41Rm/4nOB05n7kae1irSZbJOv7cuUtJo2JLggoBckePFPf/9Rv8DZyxaCU9QrWQj++plfviPV0dGD91qD0uUPzICYORGpNDJJZY1Tyf1DUbW8jsm6UtQEw8KFxNOHyuXuegIOWh080olXfoGHNbnquukU926SVyoEQaUieiPBsFzgDCGGu34RgddSD6J5be0bEcysotDgQIkg0tOb+vAi8KAiqMwrfx4zUHyKmIPhtzUpbeBQ/Wxce7uFsPc9r736iZur9w/gnrMJCnbyzez9dG8TpIwyA9hmC2R3d3wiQs+4P9Xkdoyr7sPxgXz6E1lqJwfKcoH3oSCvVCdcRD7xr7Q+yuCDgMA5Z5IhCYAi+zfS2CdjbDJkI8MBVfk3POaTonDEVpdrwzvJPDrXn3Za33M1oJUwf1W5YRXpleDiwRz5pTT6aSe5nX9/rszg2mdCF6DE7Dik+Fovln1vUnarRxzaJVzKrodQtCSSY/7o1sP85SWmHkcJVgQKqrexFj/xQlnn8qVxJ+Ep0G/sjjThQVl6+tIvE7UDCBurucNIKLUGPSuimWKY=
+  region: ORD
+  container: distfiles
+  skip_cleanup: true
+  on:
+    repo: rackerlabs/cloud-monitoring-filter-bundle
