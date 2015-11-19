@@ -1,6 +1,10 @@
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
+before_deploy:
+  - "mkdir upload"
+  - "mv custom-bundle/target/*.ear upload"
+  - "cd upload"
 deploy:
   provider: cloudfiles
   username: maasproject
