@@ -271,6 +271,13 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                         rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Unknown Error"); // (500)
                     }
                     break;
+                case SC_NOT_FOUND:   // (404)
+                    // The monitoring public API server has indicated that the entity does not exist
+                    // the role assigned here will be treated as pre-authorized (bypassing privilege checks) by the downstream Valkyrie filter,
+                    // allowing the public API server to respond with a 404
+                    LOG.debug("Entity not found received from monitoring service; inserting unregistered_product role.");
+                    httpServletRequest.addHeader(X_ROLES, UNREGISTERED_PRODUCT_ROLE);
+                    break;
                 case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
                 case SC_TOO_MANY_REQUESTS:          // (429)
                     final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
