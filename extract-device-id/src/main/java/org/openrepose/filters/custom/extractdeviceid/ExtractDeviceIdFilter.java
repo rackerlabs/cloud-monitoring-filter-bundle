@@ -253,9 +253,9 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                                 httpServletRequest.addHeader(X_DEVICE_ID, deviceId);
                             } else {
                                 // The monitoring public API server has returned an entity with an unrecogized URI format;
-                                // this filter will reject the request
-                                LOG.debug("Invalid response from monitoring service.");
-                                rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_INTERNAL_SERVER_ERROR, "Invalid response from monitoring service"); // (500)
+                                // the role assigned here will be treated as pre-authorized (bypassing privilege checks) by the downstream Valkyrie filter
+                                LOG.debug("Empty URI received from monitoring service; inserting unregistered_product role.");
+                                httpServletRequest.addHeader(X_ROLES, UNREGISTERED_PRODUCT_ROLE);
                             }
                         } else {
                             // The monitoring public API server has returned an entity with no URI;
