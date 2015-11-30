@@ -254,7 +254,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                             } else {
                                 // The monitoring public API server has returned an entity with an unrecogized URI format;
                                 // the role assigned here will be treated as pre-authorized (bypassing privilege checks) by the downstream Valkyrie filter
-                                LOG.debug("Empty URI received from monitoring service; inserting unregistered_product role.");
+                                LOG.debug("Unrecognized URI received from monitoring service; inserting unregistered_product role.");
                                 httpServletRequest.addHeader(X_ROLES, UNREGISTERED_PRODUCT_ROLE);
                             }
                         } else {
