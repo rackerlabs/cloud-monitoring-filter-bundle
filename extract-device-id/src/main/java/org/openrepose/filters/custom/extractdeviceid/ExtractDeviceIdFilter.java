@@ -33,6 +33,7 @@ import org.openrepose.core.services.datastore.Datastore;
 import org.openrepose.core.services.datastore.DatastoreService;
 import org.openrepose.core.services.serviceclient.akka.AkkaServiceClient;
 import org.openrepose.core.services.serviceclient.akka.AkkaServiceClientException;
+import org.openrepose.core.services.serviceclient.akka.AkkaServiceClientFactory;
 import org.openrepose.filters.custom.extractdeviceid.config.DelegatingType;
 import org.openrepose.filters.custom.extractdeviceid.config.ExtractDeviceIdConfig;
 import org.slf4j.Logger;
@@ -76,20 +77,21 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     private static final String UNREGISTERED_PRODUCT_ROLE = "unregistered_product";
     private static final String DEVICE_ID_KEY_PREFIX = "MaaS:Custom:DeviceId:";
     private final ConfigurationService configurationService;
-    private final AkkaServiceClient akkaServiceClient;
+    private final AkkaServiceClientFactory akkaServiceClientFactory;
     private final Datastore datastore;
     private String configurationFile = DEFAULT_CONFIG;
     private Optional<Double> delegatingQuality;
     private String maasServiceUri;
     private int cacheTimeoutMillis;
+    private AkkaServiceClient akkaServiceClient = null;
     private boolean initialized = false;
 
     @Inject
     public ExtractDeviceIdFilter(ConfigurationService configurationService,
-                                 AkkaServiceClient akkaServiceClient,
+                                 AkkaServiceClientFactory akkaServiceClientFactory,
                                  DatastoreService datastoreService) {
         this.configurationService = configurationService;
-        this.akkaServiceClient = akkaServiceClient;
+        this.akkaServiceClientFactory = akkaServiceClientFactory;
         this.datastore = datastoreService.getDefaultDatastore();
     }
 
@@ -111,6 +113,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     @Override
     public void destroy() {
         configurationService.unsubscribeFrom(configurationFile, this);
+        Optional.ofNullable(akkaServiceClient).ifPresent(AkkaServiceClient::destroy);
     }
 
     @Override
@@ -142,6 +145,9 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         delegatingQuality = Optional.ofNullable(configurationObject.getDelegating()).map(DelegatingType::getQuality);
         maasServiceUri = configurationObject.getMaasServiceUri();
         cacheTimeoutMillis = configurationObject.getCacheTimeoutMillis();
+        final AkkaServiceClient akkaServiceClientOld = akkaServiceClient;
+        akkaServiceClient = akkaServiceClientFactory.newAkkaServiceClient(configurationObject.getConnectionPoolId());
+        Optional.ofNullable(akkaServiceClientOld).ifPresent(AkkaServiceClient::destroy);
         initialized = true;
         LOG.trace("Extract Device ID filter was initialized.");
     }
