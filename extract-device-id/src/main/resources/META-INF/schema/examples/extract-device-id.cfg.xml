@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <extract-device-id xmlns='http://docs.openrepose.org/repose/extract-device-id/v1.0'
-        maas-service-uri="http://www.maas.com"
-        cache-timeout-millis="0">
+                   maas-service-uri="http://www.maas.com"
+                   cache-timeout-millis="0">
     <delegating quality="0.2"/>
 </extract-device-id>
