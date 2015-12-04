@@ -91,7 +91,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
         when(mockDatastoreService.defaultDatastore).thenReturn mockDatastore
         mockAkkaServiceClient = mock(AkkaServiceClient.class)
         mockAkkaServiceClientFactory = mock(AkkaServiceClientFactory.class)
-        when(mockAkkaServiceClientFactory.newAkkaServiceClient(anyString())).thenReturn mockAkkaServiceClient
+        when(mockAkkaServiceClientFactory.newAkkaServiceClient()).thenReturn mockAkkaServiceClient
         filter = new ExtractDeviceIdFilter(mockConfigService, mockAkkaServiceClientFactory, mockDatastoreService)
         config = new ExtractDeviceIdConfig()
         delegatingType = new DelegatingType()

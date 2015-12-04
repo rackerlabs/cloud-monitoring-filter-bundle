@@ -146,7 +146,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         maasServiceUri = configurationObject.getMaasServiceUri();
         cacheTimeoutMillis = configurationObject.getCacheTimeoutMillis();
         final AkkaServiceClient akkaServiceClientOld = akkaServiceClient;
-        akkaServiceClient = akkaServiceClientFactory.newAkkaServiceClient(configurationObject.getConnectionPoolId());
+        akkaServiceClient = akkaServiceClientFactory.newAkkaServiceClient();
         Optional.ofNullable(akkaServiceClientOld).ifPresent(AkkaServiceClient::destroy);
         initialized = true;
         LOG.trace("Extract Device ID filter was initialized.");

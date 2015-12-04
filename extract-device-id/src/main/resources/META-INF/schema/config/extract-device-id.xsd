@@ -29,15 +29,6 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="connection-pool-id" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                        The Repose HTTP Connection Pool ID to use when talking to the Rackspace MaaS endpoint.
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
         <xs:attribute name="cache-timeout-millis" type="extract-device-id:ZeroOrPositiveInteger" use="optional" default="0">
             <xs:annotation>
                 <xs:documentation>
