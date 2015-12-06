@@ -38,6 +38,7 @@ import org.openrepose.core.services.datastore.Datastore
 import org.openrepose.core.services.datastore.DatastoreService
 import org.openrepose.core.services.serviceclient.akka.AkkaServiceClient
 import org.openrepose.core.services.serviceclient.akka.AkkaServiceClientException
+import org.openrepose.core.services.serviceclient.akka.AkkaServiceClientFactory
 import org.openrepose.filters.custom.extractdeviceid.config.DelegatingType
 import org.openrepose.filters.custom.extractdeviceid.config.ExtractDeviceIdConfig
 import org.slf4j.LoggerFactory
@@ -75,6 +76,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     def Datastore mockDatastore
     def DatastoreService mockDatastoreService
     def AkkaServiceClient mockAkkaServiceClient
+    def AkkaServiceClientFactory mockAkkaServiceClientFactory
     def ConfigurationService mockConfigService
     def ListAppender listAppender
 
@@ -88,7 +90,9 @@ public class ExtractDeviceIdFilterTest extends Specification {
         mockDatastoreService = mock(DatastoreService.class)
         when(mockDatastoreService.defaultDatastore).thenReturn mockDatastore
         mockAkkaServiceClient = mock(AkkaServiceClient.class)
-        filter = new ExtractDeviceIdFilter(mockConfigService, mockAkkaServiceClient, mockDatastoreService)
+        mockAkkaServiceClientFactory = mock(AkkaServiceClientFactory.class)
+        when(mockAkkaServiceClientFactory.newAkkaServiceClient()).thenReturn mockAkkaServiceClient
+        filter = new ExtractDeviceIdFilter(mockConfigService, mockAkkaServiceClientFactory, mockDatastoreService)
         config = new ExtractDeviceIdConfig()
         delegatingType = new DelegatingType()
         delegatingType.quality = 0.9
