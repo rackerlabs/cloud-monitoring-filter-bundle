@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rackerlabs/cloud-monitoring-filter-bundle.svg)](https://travis-ci.org/rackerlabs/cloud-monitoring-filter-bundle)
+[![Circle CI](https://circleci.com/gh/rackerlabs/cloud-monitoring-filter-bundle.svg?style=shield)](https://circleci.com/gh/rackerlabs/cloud-monitoring-filter-bundle)
 
 # Cloud Monitoring Custom Repose Filter Bundle
 
