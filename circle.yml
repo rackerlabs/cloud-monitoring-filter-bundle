@@ -2,11 +2,16 @@ machine:
   java:
     version: oraclejdk8
 
+general:
+  artifacts:
+    - "custom-bundle/target"
+
 # override Circle CI's default behavior of trying to resolve dependencies first (via mvn dependency:resolve)
 # this is needed because one of the sub-module dependencies comes from building another.
 dependencies:
  override:
   - mvn install -DskipTests
+
 test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
