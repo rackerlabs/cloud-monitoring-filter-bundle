@@ -2,7 +2,11 @@
 
 # Cloud Monitoring Custom Repose Filter Bundle
 
-This project is intended to assist Cloud Monitoring in maintaining a custom filter for Repose. 
+This project is intended to assist Cloud Monitoring in maintaining a custom filter for Repose.
+
+## Requirements
+- maven
+- oracle java 8
 
 ## Clone this project
 `git clone git@github.com:rackerlabs/cloud-monitoring-filter-bundle.git`
