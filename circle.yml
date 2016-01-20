@@ -1,3 +1,9 @@
 machine:
   java:
     version: oraclejdk8
+
+# override Circle CI's default behavior of trying to resolve dependencies first (via mvn dependency:resolve)
+# this is needed because one of the sub-module dependencies comes from building another.
+dependencies:
+ override:
+  - mvn install -DskipTests
