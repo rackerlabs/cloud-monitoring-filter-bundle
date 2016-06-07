@@ -28,7 +28,6 @@ import org.openrepose.commons.config.manager.UpdateListener;
 import org.openrepose.commons.utils.servlet.http.HttpServletRequestWrapper;
 import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper;
 import org.openrepose.commons.utils.servlet.http.ResponseMode;
-
 import org.openrepose.commons.utils.http.ServiceClientResponse;
 import org.openrepose.core.filter.FilterConfigHelper;
 import org.openrepose.core.services.config.ConfigurationService;
