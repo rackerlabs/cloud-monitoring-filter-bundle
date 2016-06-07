@@ -32,7 +32,6 @@ import org.openrepose.commons.config.manager.UpdateListener
 import org.openrepose.commons.config.resource.ConfigurationResource
 import org.openrepose.commons.config.resource.ConfigurationResourceResolver
 import org.openrepose.commons.utils.http.ServiceClientResponse
-import org.openrepose.commons.utils.servlet.http.HttpServletRequestWrapper;
 import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper;
 import org.openrepose.commons.utils.servlet.http.ResponseMode;
 import org.openrepose.core.services.config.ConfigurationService
@@ -52,7 +51,6 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
