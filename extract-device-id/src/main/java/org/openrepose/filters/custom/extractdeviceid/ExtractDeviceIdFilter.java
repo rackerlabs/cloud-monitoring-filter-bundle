@@ -25,8 +25,11 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.openrepose.commons.config.manager.UpdateListener;
+import org.openrepose.commons.utils.servlet.http.HttpServletRequestWrapper;
+import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper;
+import org.openrepose.commons.utils.servlet.http.ResponseMode;
+
 import org.openrepose.commons.utils.http.ServiceClientResponse;
-import org.openrepose.commons.utils.servlet.http.MutableHttpServletRequest;
 import org.openrepose.core.filter.FilterConfigHelper;
 import org.openrepose.core.services.config.ConfigurationService;
 import org.openrepose.core.services.datastore.Datastore;
@@ -62,7 +65,7 @@ import static javax.servlet.http.HttpServletResponse.*;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.HttpHeaders.RETRY_AFTER;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.openrepose.core.filter.logic.FilterDirector.SC_TOO_MANY_REQUESTS;
+import static org.openrepose.commons.utils.http.normal.ExtendedStatusCodes.SC_TOO_MANY_REQUESTS;
 
 @Named
 public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDeviceIdConfig> {
@@ -123,18 +126,19 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
             LOG.error("Extract Device ID filter has not yet initialized...");
             ((HttpServletResponse) servletResponse).sendError(SC_INTERNAL_SERVER_ERROR); // (500)
         } else {
-            MutableHttpServletRequest mutableHttpRequest = MutableHttpServletRequest.wrap((HttpServletRequest) servletRequest);
-            HttpServletResponse httpServletResponse = ((HttpServletResponse) servletResponse);
+            HttpServletRequestWrapper wrappedHttpRequest = new HttpServletRequestWrapper((HttpServletRequest) servletRequest);
+            HttpServletResponseWrapper wrappedHttpResponse = new HttpServletResponseWrapper(
+                    (HttpServletResponse) servletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH);
 
             // This is where this filter's custom logic is invoked.
             LOG.trace("Extract Device ID filter processing request...");
-            if (handleRequest(mutableHttpRequest, httpServletResponse)) {
+            if (handleRequest(wrappedHttpRequest, wrappedHttpResponse)) {
 
                 LOG.trace("Extract Device ID filter passing on down the Filter Chain...");
-                filterChain.doFilter(mutableHttpRequest, httpServletResponse);
+                filterChain.doFilter(wrappedHttpRequest, wrappedHttpResponse);
 
                 LOG.trace("Extract Device ID filter processing response...");
-                handleResponse(mutableHttpRequest, httpServletResponse);
+                handleResponse(wrappedHttpRequest, wrappedHttpResponse);
             }
         }
         LOG.trace("Extract Device ID filter returning response...");
@@ -157,7 +161,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
         return initialized;
     }
 
-    private boolean handleRequest(MutableHttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
+    private boolean handleRequest(HttpServletRequestWrapper httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
         boolean rtn = true;
         final String entityId = ExtractDeviceIdFilter.extractPrefixedElement(httpServletRequest.getRequestURI(), "entities");
         if (entityId != null) {
@@ -215,7 +219,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     }
 
     private boolean getDeviceId(
-            final MutableHttpServletRequest httpServletRequest,
+            final HttpServletRequestWrapper httpServletRequest,
             final HttpServletResponse httpServletResponse,
             final String authToken,
             final String entityId
@@ -334,7 +338,7 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
     }
 
     private boolean addDelegatedHeaderOrSendError(
-            MutableHttpServletRequest httpServletRequest,
+            HttpServletRequestWrapper httpServletRequest,
             HttpServletResponse httpServletResponse,
             int statusCode,
             String message

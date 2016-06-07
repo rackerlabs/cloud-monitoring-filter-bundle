@@ -17,20 +17,40 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.openrepose</groupId>
-            <artifactId>core-lib</artifactId>
+            <groupId>javax</groupId>
+            <artifactId>javaee-web-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.openrepose</groupId>
-            <artifactId>core-service-api</artifactId>
+            <artifactId>repose-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>org.openrepose</groupId>
-            <artifactId>utilities</artifactId>
+            <artifactId>repose-core-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.jvnet.jaxb2_commons</groupId>
-            <artifactId>jaxb2-basics-runtime</artifactId>
+            <groupId>org.openrepose</groupId>
+            <artifactId>commons-utilities</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openrepose</groupId>
+            <artifactId>datastore-service-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openrepose</groupId>
+            <artifactId>akka-http-client-service-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>

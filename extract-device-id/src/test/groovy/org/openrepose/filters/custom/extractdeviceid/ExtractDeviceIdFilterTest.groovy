@@ -32,7 +32,9 @@ import org.openrepose.commons.config.manager.UpdateListener
 import org.openrepose.commons.config.resource.ConfigurationResource
 import org.openrepose.commons.config.resource.ConfigurationResourceResolver
 import org.openrepose.commons.utils.http.ServiceClientResponse
-import org.openrepose.commons.utils.servlet.http.MutableHttpServletResponse
+import org.openrepose.commons.utils.servlet.http.HttpServletRequestWrapper;
+import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper;
+import org.openrepose.commons.utils.servlet.http.ResponseMode;
 import org.openrepose.core.services.config.ConfigurationService
 import org.openrepose.core.services.datastore.Datastore
 import org.openrepose.core.services.datastore.DatastoreService
@@ -50,6 +52,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 
@@ -61,7 +64,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON
 import static org.junit.Assert.*
 import static org.mockito.Matchers.*
 import static org.mockito.Mockito.*
-import static org.openrepose.core.filter.logic.FilterDirector.SC_TOO_MANY_REQUESTS
+import static org.openrepose.commons.utils.http.normal.ExtendedStatusCodes.SC_TOO_MANY_REQUESTS;
 
 public class ExtractDeviceIdFilterTest extends Specification {
     def LOG = LoggerFactory.getLogger(this.class)
@@ -716,7 +719,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     @Unroll
     def 'Return/Add an Service Unavailable (503) if the MaaS request was rate limited [delegating = #delegating][MaaS Code = #statusCode]'() {
         given:
-        def mutableHttpServletResponse = MutableHttpServletResponse.wrap(httpServletRequest, httpServletResponse)
+        def mutableHttpServletResponse = new HttpServletResponseWrapper(httpServletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH)
         if (delegating) {
             config.delegating = delegatingType
         }
@@ -770,7 +773,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     @Unroll
     def 'Return/Add an Internal Server Error (500) if the MaaS request returns an unexpected code [delegating = #delegating]'() {
         given:
-        def mutableHttpServletResponse = MutableHttpServletResponse.wrap(httpServletRequest, httpServletResponse)
+        def mutableHttpServletResponse = new HttpServletResponseWrapper(httpServletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH)
         if (delegating) {
             config.delegating = delegatingType
         }
