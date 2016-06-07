@@ -126,18 +126,17 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
             ((HttpServletResponse) servletResponse).sendError(SC_INTERNAL_SERVER_ERROR); // (500)
         } else {
             HttpServletRequestWrapper wrappedHttpRequest = new HttpServletRequestWrapper((HttpServletRequest) servletRequest);
-            HttpServletResponseWrapper wrappedHttpResponse = new HttpServletResponseWrapper(
-                    (HttpServletResponse) servletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH);
+            HttpServletResponse httpServletResponse = ((HttpServletResponse) servletResponse);
 
             // This is where this filter's custom logic is invoked.
             LOG.trace("Extract Device ID filter processing request...");
-            if (handleRequest(wrappedHttpRequest, wrappedHttpResponse)) {
+            if (handleRequest(wrappedHttpRequest, httpServletResponse)) {
 
                 LOG.trace("Extract Device ID filter passing on down the Filter Chain...");
-                filterChain.doFilter(wrappedHttpRequest, wrappedHttpResponse);
+                filterChain.doFilter(wrappedHttpRequest, httpServletResponse);
 
                 LOG.trace("Extract Device ID filter processing response...");
-                handleResponse(wrappedHttpRequest, wrappedHttpResponse);
+                handleResponse(wrappedHttpRequest, httpServletResponse);
             }
         }
         LOG.trace("Extract Device ID filter returning response...");
