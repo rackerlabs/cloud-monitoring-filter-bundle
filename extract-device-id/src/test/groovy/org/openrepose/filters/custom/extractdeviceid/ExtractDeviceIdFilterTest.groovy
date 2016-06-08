@@ -32,8 +32,8 @@ import org.openrepose.commons.config.manager.UpdateListener
 import org.openrepose.commons.config.resource.ConfigurationResource
 import org.openrepose.commons.config.resource.ConfigurationResourceResolver
 import org.openrepose.commons.utils.http.ServiceClientResponse
-import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper;
-import org.openrepose.commons.utils.servlet.http.ResponseMode;
+import org.openrepose.commons.utils.servlet.http.HttpServletResponseWrapper
+import org.openrepose.commons.utils.servlet.http.ResponseMode
 import org.openrepose.core.services.config.ConfigurationService
 import org.openrepose.core.services.datastore.Datastore
 import org.openrepose.core.services.datastore.DatastoreService
@@ -62,7 +62,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON
 import static org.junit.Assert.*
 import static org.mockito.Matchers.*
 import static org.mockito.Mockito.*
-import static org.openrepose.commons.utils.http.normal.ExtendedStatusCodes.SC_TOO_MANY_REQUESTS;
+import static org.openrepose.commons.utils.http.normal.ExtendedStatusCodes.SC_TOO_MANY_REQUESTS
 
 public class ExtractDeviceIdFilterTest extends Specification {
     def LOG = LoggerFactory.getLogger(this.class)
