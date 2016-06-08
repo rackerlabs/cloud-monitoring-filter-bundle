@@ -13,7 +13,7 @@
     <artifactId>functional-test</artifactId>
 
     <properties>
-        <repose.version>8.0.0.0</repose.version>
+        <repose.version>8.0.1.0</repose.version>
 
         <!-- this is the version of artifacts to use from the published repose-support project -->
         <test.artifact.version>3.0</test.artifact.version>

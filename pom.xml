@@ -24,7 +24,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.license>apache20</project.license>
         <project.inceptionYear>2010</project.inceptionYear>
-        <repose.version>8.0.0.0</repose.version>
+        <repose.version>8.0.1.0</repose.version>
         <groovy.version>2.4.3</groovy.version>
         <spock.version>0.7-groovy-2.0</spock.version>
         <gmaven.version>1.5</gmaven.version>
