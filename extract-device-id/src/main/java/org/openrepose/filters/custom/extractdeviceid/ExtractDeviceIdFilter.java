@@ -285,11 +285,17 @@ public class ExtractDeviceIdFilter implements Filter, UpdateListener<ExtractDevi
                     httpServletRequest.addHeader(X_ROLES, UNREGISTERED_PRODUCT_ROLE);
                     break;
                 case SC_REQUEST_ENTITY_TOO_LARGE:   // (413)
-                case SC_TOO_MANY_REQUESTS:          // (429)
-                    final String retryString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
-                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_SERVICE_UNAVAILABLE, retryString); // (503)
+                    final String retryTooLargeString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_SERVICE_UNAVAILABLE);  // (503)
+                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_SERVICE_UNAVAILABLE, retryTooLargeString); // (503)
                     if (!rtn) {
-                        httpServletResponse.addHeader(RETRY_AFTER, retryString);
+                        httpServletResponse.addHeader(RETRY_AFTER, retryTooLargeString);
+                    }
+                    break;
+                case SC_TOO_MANY_REQUESTS:          // (429)
+                    final String retryTooManyString = ExtractDeviceIdFilter.getRetryString(serviceClientResponse.getHeaders(), SC_TOO_MANY_REQUESTS);  // (429)
+                    rtn = addDelegatedHeaderOrSendError(httpServletRequest, httpServletResponse, SC_TOO_MANY_REQUESTS, retryTooManyString); // (429)
+                    if (!rtn) {
+                        httpServletResponse.addHeader(RETRY_AFTER, retryTooManyString);
                     }
                     break;
                 default:
