@@ -715,7 +715,7 @@ public class ExtractDeviceIdFilterTest extends Specification {
     }
 
     @Unroll
-    def 'Return/Add an Service Unavailable (503) if the MaaS request was rate limited [delegating = #delegating][MaaS Code = #statusCode]'() {
+    def 'Return/Add a Service Unavailable (503) if the MaaS request entity was too large [delegating = #delegating][MaaS Code = #statusCode]'() {
         given:
         def mutableHttpServletResponse = new HttpServletResponseWrapper(httpServletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH)
         if (delegating) {
@@ -763,8 +763,58 @@ public class ExtractDeviceIdFilterTest extends Specification {
         where:
         delegating | statusCode
         true       | SC_REQUEST_ENTITY_TOO_LARGE    // (413)
-        true       | SC_TOO_MANY_REQUESTS           // (429)
         false      | SC_REQUEST_ENTITY_TOO_LARGE    // (413)
+    }
+
+    @Unroll
+    def 'Return/Add a Too Many Requests (429) if the MaaS request was rate limited [delegating = #delegating][MaaS Code = #statusCode]'() {
+        given:
+        def mutableHttpServletResponse = new HttpServletResponseWrapper(httpServletResponse, ResponseMode.PASSTHROUGH, ResponseMode.PASSTHROUGH)
+        if (delegating) {
+            config.delegating = delegatingType
+        }
+        def entityId = UUID.randomUUID().toString()
+        def alarmsId = UUID.randomUUID().toString()
+        def requestPath = "/tenantId/entities/" + entityId
+        def requestExtra = "/alarms/" + alarmsId
+        httpServletRequest.requestURI = ORIG_ENDPOINT + requestPath + requestExtra
+        httpServletRequest.addHeader "X-Auth-Token", UUID.randomUUID()
+        def retryString = ZonedDateTime.now().format(RFC_1123_DATE_TIME)
+        LOG.debug config.toString()
+
+        when(mockAkkaServiceClient.get(
+                anyString(),
+                eq(config.maasServiceUri + requestPath),
+                anyMapOf(String.class, String.class)
+        )).thenReturn new ServiceClientResponse(
+                statusCode as int,
+                [
+                        new BasicHeader(CONTENT_TYPE, APPLICATION_JSON),
+                        new BasicHeader(RETRY_AFTER, retryString)
+                ] as Header[],
+                new ByteArrayInputStream("""
+                        |Invalid JSON
+                        """.stripMargin().stripIndent().bytes
+                ))
+
+        when:
+        filter.configurationUpdated config
+        filter.doFilter httpServletRequest, mutableHttpServletResponse, filterChain
+
+        then:
+        if (delegating) {
+            assertEquals SC_OK, mutableHttpServletResponse.status // (200)
+            assertThat "Should add proper delegation header",
+                    (filterChain.request as HttpServletRequest).getHeader("X-Delegated"),
+                    isFormatted(SC_TOO_MANY_REQUESTS, retryString, delegatingType.quality) // (429)
+        } else {
+            assertEquals SC_TOO_MANY_REQUESTS, mutableHttpServletResponse.status // (429)
+            assertEquals retryString, mutableHttpServletResponse.getHeader(RETRY_AFTER)
+        }
+
+        where:
+        delegating | statusCode
+        true       | SC_TOO_MANY_REQUESTS           // (429)
         false      | SC_TOO_MANY_REQUESTS           // (429)
     }
 
